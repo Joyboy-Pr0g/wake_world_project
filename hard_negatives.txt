@@ -1,0 +1,22 @@
+# Nonwake files incorrectly predicted as Wake
+dataset\nonwake\Cigdem_Kurt_nowake_1.wav
+dataset\nonwake\Berkan_Öksüz_Nowake_2.wav
+dataset\nonwake\hamza_kurtuldu_nowake_1.wav
+dataset\nonwake\Ümit_Aktaş_Nowake_2.wav
+dataset\nonwake\Hatice_nur_cakir_nowake_2.wav
+dataset\nonwake\Özlem_Güntekin_nowake_2.wav
+dataset\nonwake\Berkan_Öksüz_Nowake_1.wav
+dataset\nonwake\Naim_musaağa.wav
+dataset\nonwake\Hasan_Arthur_Altuntaş_no_wake1.wav
+dataset\nonwake\Ahmet_İsmail_Özkan_nowake_2.wav
+dataset\nonwake\İsmail_Yakar_nowake_1.wav
+dataset\nonwake\Salih_Karakus_nonwake_1.wav
+dataset\nonwake\Hakan_Karakaya_nowake_2.wav
+dataset\nonwake\Elif_sude_unal_nowake_1.wav
+dataset\nonwake\Betul_kis_nowake_1.wav
+dataset\nonwake\yaseen_abdulsatar_alsabee_wake2.wav
+dataset\nonwake\Nilgun_Melek_Bilgin_nowake_1.wav
+dataset\nonwake\Baris_Aslan_Nowake_1.wav
+dataset\nonwake\Ümit_Aktaş_Nowake_1.wav
+dataset\nonwake\Emir_Ozogul_nowake_1.wav
+dataset\nonwake\Abdurrahman_Saracoglu_nowake_1.wav

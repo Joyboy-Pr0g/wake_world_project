@@ -1,0 +1,6 @@
+Files that tricked the model (False Positives):
+--------------------------------------------------
+File: aly_abdelhalim_nonwake_1.wav | Wake Probability: 0.7456
+File: aly_abdelhalim_nonwake_2.wav | Wake Probability: 0.7294
+File: Cigdem_Kurt_nowake_1.wav | Wake Probability: 0.7615
+File: Goksu_Kesen_nonwake_1.wav | Wake Probability: 0.7583

@@ -1,0 +1,24 @@
+Hard Negative Mining Report (threshold=0.7)
+FP rows (nonwake predicted as wake): 18
+Unique files copied to hard_negatives/: 18
+
+Filename - P(wake) score
+--------------------------------------------------
+Pinar_Unver_nowake_1.wav - 0.89 probability
+Hasan_Arthur_Altuntaş_no_wake1.wav - 0.86 probability
+Tugce_Deniz_nowake_2.wav - 0.85 probability
+aly_abdelhalim_nonwake_2.wav - 0.84 probability
+Tugce_Deniz_nowake_1.wav - 0.82 probability
+Enes_Yilmaz_nowake2.wav - 0.81 probability
+Ömer_Faruk_Ergün_nowake_1.wav - 0.81 probability
+Mustafa_Helvaci_nowake2.wav - 0.78 probability
+HavvaBelinay_Yuce_nowake_2.wav - 0.76 probability
+HavvaBelinay_Yuce_nowake_1.wav - 0.75 probability
+Emir_Ozogul_nowake_2.wav - 0.74 probability
+Hasan_Arthur_Altuntaş_no_wake2.wav - 0.74 probability
+Rumeysa_Navruz_nowake_1.wav - 0.73 probability
+sevim_sude_sanli_nowake2.wav - 0.73 probability
+Zeynep_Cakir_nowake_2.wav - 0.73 probability
+Sumeyye_Gursoy_nowake_2.wav - 0.72 probability
+aly_abdelhalim_nonwake_1.wav - 0.71 probability
+Dilara_Ozturk_NoWake_1.wav - 0.71 probability
