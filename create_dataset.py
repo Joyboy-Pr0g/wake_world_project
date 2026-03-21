@@ -10,6 +10,17 @@ max_len = 16000
 sr = 16000
 
 
+def apply_reverb(audio, sr_audio, room_scale=0.25):
+    """Synthetic reverb via exponentially decaying noise impulse."""
+    impulse_len = int(sr_audio * room_scale)
+    t = np.linspace(0, room_scale, impulse_len)
+    rng = np.random.default_rng(seed=42)
+    impulse = np.exp(-6 * t) * rng.standard_normal(impulse_len).astype(np.float32)
+    impulse /= (np.max(np.abs(impulse)) + 1e-8)
+    reverbed = np.convolve(audio, impulse, mode="full")[:len(audio)]
+    return reverbed.astype(np.float32)
+
+
 def extract_features(audio, sample_rate):
     """Pad/truncate to 1 sec, extract MFCC, delta, delta-delta, spectral contrast, ZCR, Mel, chroma, RMS."""
     if len(audio) < max_len:
@@ -67,11 +78,19 @@ for label in labels:
             continue
 
         if label == "wake":
-            # Augmentation: 3 samples per wake file (original, pitch_shift, time_stretch)
+            # 10 augmentations per wake file for better recall
+            noise = np.random.randn(len(audio)).astype(np.float32) * 0.005 * np.std(audio)
             for aug_type, aug_audio in [
                 ("original", audio.copy()),
-                ("pitch_shift", librosa.effects.pitch_shift(y=audio, sr=sr, n_steps=2)),
-                ("time_stretch", librosa.effects.time_stretch(y=audio, rate=1.1)),
+                ("pitch_shift_up2", librosa.effects.pitch_shift(y=audio, sr=sr, n_steps=2)),
+                ("pitch_shift_down2", librosa.effects.pitch_shift(y=audio, sr=sr, n_steps=-2)),
+                ("pitch_shift_up1", librosa.effects.pitch_shift(y=audio, sr=sr, n_steps=1)),
+                ("pitch_shift_down1", librosa.effects.pitch_shift(y=audio, sr=sr, n_steps=-1)),
+                ("time_stretch_fast", librosa.effects.time_stretch(y=audio, rate=1.1)),
+                ("time_stretch_slow", librosa.effects.time_stretch(y=audio, rate=0.9)),
+                ("time_stretch_105", librosa.effects.time_stretch(y=audio, rate=1.05)),
+                ("noise", audio + noise),
+                ("reverb", apply_reverb(audio, sr)),
             ]:
                 row = extract_features(aug_audio, sr) + [label, path]
                 data.append(row)
@@ -81,9 +100,9 @@ for label in labels:
             data.append(row)
             manifest.append((path, label, "original"))
 
-# Targeted hard negative augmentation: 10 versions per file in hard_negatives/
+# Targeted hard negative augmentation: 15 versions per file in hard_negatives/
 def augment_hard_negatives():
-    """Generate 10 augmented nonwake samples per file in hard_negatives/ folder."""
+    """Generate 15 augmented nonwake samples per file in hard_negatives/ folder."""
     if not os.path.isdir(HARD_NEG_DIR):
         return [], []
     hndata, hnmanifest = [], []
@@ -98,7 +117,7 @@ def augment_hard_negatives():
             continue
         # Use source path for tracking (file in hard_negatives/ is a copy)
         source_path = path
-        for i in range(10):
+        for i in range(15):
             rng = np.random.default_rng(seed=hash(fname + str(i)) % 2**32)
             aug = audio.copy()
             # Pitch shift: -2 to +2 semitones
