@@ -1,7 +1,3 @@
-"""
-Wake word detection: stacking ensemble with recall-focused tuning.
-Target: 85-90% wake recall and accuracy.
-"""
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import GridSearchCV, GroupShuffleSplit
@@ -35,7 +31,6 @@ N_FEATURES_RFE = 65
 
 
 class XGBWrapper(BaseEstimator, ClassifierMixin):
-    """Picklable XGBoost wrapper with string labels."""
     def __init__(self, n_estimators=200, max_depth=6, learning_rate=0.05, scale_pos_weight=1, random_state=42):
         self.n_estimators = n_estimators
         self.max_depth = max_depth
@@ -132,7 +127,6 @@ def main():
         X_test_sel = X_test_scaled[:, selected_mask]
     print(f"RFE: selected top {n_select} features")
 
-    # recall_macro prioritizes wake detection
     svc_grid = GridSearchCV(
         SVC(kernel="rbf", probability=True, class_weight="balanced"),
         {"C": [0.1, 1, 10, 100], "gamma": [1e-3, 1e-4, "scale"]},
@@ -186,7 +180,6 @@ def main():
     wake_idx = list(model.classes_).index("wake") if "wake" in model.classes_ else 1
     proba_val = model.predict_proba(X_val_sel)[:, wake_idx]
 
-    # Threshold: minimize FP s.t. wake_recall >= 75% (target: FP < 30 on test)
     best_thr, best_fp, best_wr = 0.5, int(1e9), 0.0
     fallback_thr, fallback_fp, fallback_wr = 0.35, int(1e9), 0.0
     for thr in np.arange(0.15, 0.71, 0.01):

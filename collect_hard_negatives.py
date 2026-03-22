@@ -1,7 +1,3 @@
-"""
-Copy FP files from hard_negatives.txt into hard_negatives/ folder.
-Run after train_model.py writes hard_negatives.txt, then re-run create_dataset.py and train_model.py.
-"""
 import os
 import shutil
 
@@ -27,7 +23,7 @@ def main():
             fname = os.path.basename(src)
             dst = os.path.join(HARD_NEG_DIR, fname)
             if os.path.normpath(src) == os.path.normpath(dst):
-                continue  # already in hard_negatives
+                continue
             shutil.copy2(src, dst)
             count += 1
     print(f"Copied {count} files to {HARD_NEG_DIR}/")

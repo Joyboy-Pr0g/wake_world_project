@@ -11,7 +11,6 @@ sr = 16000
 
 
 def apply_reverb(audio, sr_audio, room_scale=0.25):
-    """Synthetic reverb via exponentially decaying noise impulse."""
     impulse_len = int(sr_audio * room_scale)
     t = np.linspace(0, room_scale, impulse_len)
     rng = np.random.default_rng(seed=42)
@@ -22,7 +21,6 @@ def apply_reverb(audio, sr_audio, room_scale=0.25):
 
 
 def extract_features(audio, sample_rate):
-    """Pad/truncate to 1 sec, extract MFCC, delta, delta-delta, spectral contrast, ZCR, Mel, chroma, RMS."""
     if len(audio) < max_len:
         audio = np.pad(audio, (0, max_len - len(audio)))
     else:
@@ -63,7 +61,7 @@ def extract_features(audio, sample_rate):
 
 
 data = []
-manifest = []  # (path, label, aug_type) for hard negative mining
+manifest = []
 
 for label in labels:
     folder = os.path.join(DATASET_PATH, label)
@@ -78,7 +76,6 @@ for label in labels:
             continue
 
         if label == "wake":
-            # 10 augmentations per wake file for better recall
             noise = np.random.randn(len(audio)).astype(np.float32) * 0.005 * np.std(audio)
             for aug_type, aug_audio in [
                 ("original", audio.copy()),
@@ -100,9 +97,7 @@ for label in labels:
             data.append(row)
             manifest.append((path, label, "original"))
 
-# Targeted hard negative augmentation: 15 versions per file in hard_negatives/
 def augment_hard_negatives():
-    """Generate 15 augmented nonwake samples per file in hard_negatives/ folder."""
     if not os.path.isdir(HARD_NEG_DIR):
         return [], []
     hndata, hnmanifest = [], []
@@ -115,7 +110,6 @@ def augment_hard_negatives():
         except Exception as e:
             print(f"Skipping hard negative {path}: {e}")
             continue
-        # Use source path for tracking (file in hard_negatives/ is a copy)
         source_path = path
         for i in range(15):
             rng = np.random.default_rng(seed=hash(fname + str(i)) % 2**32)
@@ -124,7 +118,6 @@ def augment_hard_negatives():
             n_steps = rng.integers(-2, 3)
             if n_steps != 0:
                 aug = librosa.effects.pitch_shift(y=aug, sr=sr, n_steps=n_steps)
-            # Time stretch: 0.9x to 1.1x
             rate = float(rng.uniform(0.9, 1.1))
             aug = librosa.effects.time_stretch(y=aug, rate=rate)
             # Add tiny white noise (SNR ~40dB)
@@ -142,7 +135,6 @@ if hndata:
     manifest.extend(hnmanifest)
     print(f"Added {len(hndata)} hard negative augmented samples from {HARD_NEG_DIR}/")
 
-# Delta-delta (acceleration) + spectral contrast + ZCR + Mel + chroma + RMS
 delta2_cols = [f"delta2_{i}" for i in range(13)] + [f"delta2_std_{i}" for i in range(13)]
 contrast_cols = [f"contrast_{i}" for i in range(7)] + [f"contrast_std_{i}" for i in range(7)]
 mel_cols = [f"mel_mean_{i}" for i in range(40)] + [f"mel_std_{i}" for i in range(40)]

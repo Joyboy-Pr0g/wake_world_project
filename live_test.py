@@ -1,7 +1,3 @@
-"""
-Live wake-word detection using the microphone.
-Uses StreamingWakeDetector with 2 consecutive windows at P(wake) > 0.5.
-"""
 import sys
 import numpy as np
 
@@ -15,19 +11,16 @@ except ImportError:
 from create_dataset import extract_features, FEATURE_COLUMNS
 from inference import load_artifacts, StreamingWakeDetector
 
-# Audio config (must match training: 16 kHz, mono)
 SAMPLE_RATE = 16000
-CHUNK = 16000  # 1 second per window
+CHUNK = 16000
 FORMAT = pyaudio.paInt16
 CHANNELS = 1
 
-# Sliding window: update every 0.25s with last 1s of audio (reduces latency)
-HOP_SAMPLES = 4000  # 0.25 seconds
-BUFFER_SIZE = 16000  # 1 second
+HOP_SAMPLES = 4000
+BUFFER_SIZE = 16000
 
 
 def features_to_dict(features_list, config):
-    """Convert extract_features list to dict. Keys = all_feature_cols (after drop)."""
     d = dict(zip(FEATURE_COLUMNS, features_list))
     all_cols = config.get("all_feature_cols")
     if all_cols:
@@ -47,25 +40,21 @@ def main():
         channels=CHANNELS,
         rate=SAMPLE_RATE,
         input=True,
-        frames_per_buffer=HOP_SAMPLES,  # Small reads to avoid buffer overflow
+        frames_per_buffer=HOP_SAMPLES,
     )
 
-    # Ring buffer for sliding 1s window
     buffer = np.zeros(BUFFER_SIZE, dtype=np.float32)
     print("Listening... (Ctrl+C to stop)")
     print("Say your wake word twice in a row to trigger.\n")
 
     try:
         while True:
-            # Read 0.25s chunk (non-blocking would need threading; blocking is fine if processing is fast)
             raw = stream.read(HOP_SAMPLES, exception_on_overflow=False)
             chunk = np.frombuffer(raw, dtype=np.int16).astype(np.float32) / 32768.0
 
-            # Slide buffer: shift left, append new
             buffer[:-HOP_SAMPLES] = buffer[HOP_SAMPLES:]
             buffer[-HOP_SAMPLES:] = chunk
 
-            # Extract features from full 1s window
             features_list = extract_features(buffer.copy(), SAMPLE_RATE)
             features_dict = features_to_dict(features_list, config)
 
