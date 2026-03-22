@@ -246,7 +246,7 @@ def main():
         "contrast_p25": contrast_p25,
         "contrast_p75": contrast_p75,
         "sequential_windows": 2,
-        "sequential_threshold": 0.5,
+        "sequential_threshold": optimal_threshold,
     }, "inference_config.pkl")
 
     fp_mask = (y_test.values == "nonwake") & (np.array(y_pred) == "wake")

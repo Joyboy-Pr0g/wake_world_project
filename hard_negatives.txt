@@ -1,8 +1,8 @@
 # Nonwake files incorrectly predicted as Wake
-dataset\nonwake\Abdulhakim_Sanli_nowake1.wav
 dataset\nonwake\Abdulsamet_Kir_nonwake_1.wav
 dataset\nonwake\Ahmet_emir_karakas_nowake_2.wav
 dataset\nonwake\Alpha_Cisse_nowake_1.wav
+dataset\nonwake\Arshad_qurishy_nowake_1.wav
 dataset\nonwake\Baris_Aslan_Nowake_1.wav
 dataset\nonwake\busra_basan_nowake_2.wav
 dataset\nonwake\Cigdem_Kurt_nowake_1.wav
@@ -21,17 +21,16 @@ dataset\nonwake\Huseyin_Cakmak_nowake1.wav
 dataset\nonwake\Irem_Nur_Sahin_nowake_2.wav
 dataset\nonwake\irem_yagmur_yurtsever_nonwake_1.wav
 dataset\nonwake\Mehmet_Tat_NoWake_1.wav
+dataset\nonwake\Mustafa_Helvaci_nowake1.wav
 dataset\nonwake\Nilgun_Melek_Bilgin_nowake_1.wav
 dataset\nonwake\Salih_Karakus_nonwake_2.wav
 dataset\nonwake\Samet_Can_Karakuş_nowake_1.wav
 dataset\nonwake\Tugce_Deniz_nowake_2.wav
 dataset\nonwake\Yunus_Akinci_nowake_2.wav
+dataset\nonwake\Yusuf_Selim_Yilmaz_nowake_2.wav
 dataset\nonwake\Ömer_Faruk_Ergün_nowake_2.wav
 hard_negatives\Ahmet_İsmail_Özkan_nowake_2.wav
 hard_negatives\Alpha_Cisse_nowake_1.wav
-hard_negatives\Fatih_Arslan_nowake2.wav
-hard_negatives\Goksu_Kesen_nonwake_1.wav
 hard_negatives\Mustafa_Sakalli_nowake1.wav
 hard_negatives\numan_cirpan_nowake_2.wav
 hard_negatives\yaseen_abdulsatar_alsabee_wake2.wav
-hard_negatives\yusuf_safa_kilic_nowake_1.wav
