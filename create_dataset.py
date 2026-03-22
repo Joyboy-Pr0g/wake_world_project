@@ -114,13 +114,11 @@ def augment_hard_negatives():
         for i in range(15):
             rng = np.random.default_rng(seed=hash(fname + str(i)) % 2**32)
             aug = audio.copy()
-            # Pitch shift: -2 to +2 semitones
             n_steps = rng.integers(-2, 3)
             if n_steps != 0:
                 aug = librosa.effects.pitch_shift(y=aug, sr=sr, n_steps=n_steps)
             rate = float(rng.uniform(0.9, 1.1))
             aug = librosa.effects.time_stretch(y=aug, rate=rate)
-            # Add tiny white noise (SNR ~40dB)
             noise = rng.standard_normal(len(aug)) * 0.01 * np.std(aug)
             aug = aug + noise.astype(np.float32)
             row = extract_features(aug, sr) + ["nonwake", source_path]

@@ -13,6 +13,7 @@ Real-time wake word detection using a stacking ensemble (SVC, Random Forest, XGB
 | Library | Version | Purpose |
 |---------|---------|---------|
 | librosa | ≥ 0.10.0 | Audio loading and feature extraction |
+| soundfile | ≥ 0.12.0 | WAV/FLAC loading (fixes PySoundFile failed warning) |
 | numpy | ≥ 1.23.0 | Numerical operations |
 | pandas | ≥ 1.5.0 | Dataset handling |
 | scikit-learn | ≥ 1.2.0 | ML models, scaling, cross-validation |
@@ -31,6 +32,16 @@ Real-time wake word detection using a stacking ensemble (SVC, Random Forest, XGB
 pip install -r requirements.txt
 ```
 
+### FFmpeg (optional, system install)
+
+If you use **MP3 or other non-WAV formats**, install FFmpeg so librosa can load them via audioread:
+
+- **Windows:** [ffmpeg.org](https://ffmpeg.org/download.html) or `winget install FFmpeg`
+- **macOS:** `brew install ffmpeg`
+- **Linux:** `apt install ffmpeg` or `yum install ffmpeg`
+
+For **WAV files only**, `soundfile` in requirements.txt is sufficient.
+
 ### Windows – If `pyaudio` fails
 
 ```powershell
@@ -41,7 +52,7 @@ pipwin install pyaudio
 ### Alternative: install libraries manually
 
 ```powershell
-pip install librosa numpy pandas scikit-learn imbalanced-learn xgboost joblib matplotlib seaborn pyaudio
+pip install librosa soundfile numpy pandas scikit-learn imbalanced-learn xgboost joblib matplotlib seaborn pyaudio
 ```
 
 ---
