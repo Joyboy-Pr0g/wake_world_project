@@ -1,4 +1,3 @@
-"""File-based test (no microphone)."""
 import os
 import sys
 import numpy as np
@@ -11,14 +10,12 @@ from .inference import load_artifacts
 
 
 def features_to_df(features_list, config):
-    """Convert feature list to DataFrame for scaler (preserves feature names)."""
     d = dict(zip(FEATURE_COLUMNS, features_list))
     all_cols = config.get("all_feature_cols", config["feature_cols"])
     return pd.DataFrame([[d[c] for c in all_cols]], columns=all_cols)
 
 
 def safe_print(text):
-    """Print text, handling Unicode on Windows console."""
     try:
         print(text)
     except UnicodeEncodeError:
@@ -26,7 +23,6 @@ def safe_print(text):
 
 
 def process_file(path, model, scaler, config, sr, window_size, hop_size, normalize=True, target_rms=0.05):
-    """Process a single audio file and return wake probabilities per window."""
     audio, _ = librosa.load(path, sr=sr)
     if len(audio) < window_size:
         audio = np.pad(audio, (0, window_size - len(audio)))
@@ -59,7 +55,6 @@ def process_file(path, model, scaler, config, sr, window_size, hop_size, normali
 
 
 def _has_consecutive_high(probs, threshold, n_consecutive):
-    """True if probs has at least n_consecutive consecutive values above threshold."""
     run = 0
     for p in probs:
         if p > threshold:
@@ -72,9 +67,6 @@ def _has_consecutive_high(probs, threshold, n_consecutive):
 
 
 def run_file_test(threshold_override=None, smoothing_windows=2):
-    """Run file-based test on test_samples/ directory.
-    threshold_override: if set, use this (recommended 0.70).
-    smoothing_windows: require N consecutive high-confidence windows to trigger (default 2)."""
     from .config import get_project_root
     cfg = load_config()
     root = get_project_root()

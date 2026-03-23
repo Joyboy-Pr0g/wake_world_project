@@ -1,4 +1,3 @@
-"""Dataset building from audio files."""
 import os
 import librosa
 import numpy as np
@@ -19,7 +18,6 @@ def _get_audio_config():
 
 
 def _add_background_noise(audio, rng, noise_type="white", level=0.03):
-    """Add background noise: white, or fan-like (low-pass filtered white)."""
     if noise_type == "white":
         noise = rng.standard_normal(len(audio)).astype(np.float32) * level * np.std(audio)
         return audio + noise
@@ -34,7 +32,6 @@ def _add_background_noise(audio, rng, noise_type="white", level=0.03):
 
 
 def augment_hard_negatives():
-    """Load and augment hard negative samples with background noise. Returns (data_rows, manifest_rows)."""
     cfg = load_config()
     root = get_project_root()
     hn_dir = root / cfg["paths"]["hard_negatives"]
@@ -78,7 +75,6 @@ def augment_hard_negatives():
 
 
 def build_dataset():
-    """Build dataset.csv and dataset_manifest.csv from audio folders."""
     cfg = load_config()
     root = get_project_root()
     dataset_path = root / cfg["paths"]["dataset"]

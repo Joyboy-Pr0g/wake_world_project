@@ -1,4 +1,3 @@
-"""Backward compatibility: delegates to wakeword package. Run: python train_model.py"""
 import sys
 from pathlib import Path
 
@@ -10,7 +9,6 @@ if str(src) not in sys.path:
 from wakeword.config import load_config
 from wakeword.train import train_model, XGBWrapper
 
-# Re-export for file_test_simulation: from train_model import XGBWrapper
 __all__ = ["train_model", "XGBWrapper"]
 
 

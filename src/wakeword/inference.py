@@ -1,4 +1,3 @@
-"""Inference and streaming detection."""
 import numpy as np
 import joblib
 
@@ -6,7 +5,6 @@ from .config import load_config, get_project_root
 
 
 def predict_with_threshold(model, X_scaled, threshold=0.7, wake_class="wake"):
-    """Apply threshold to probability predictions."""
     classes = model.classes_
     wake_idx = list(classes).index(wake_class)
     proba = model.predict_proba(X_scaled)[:, wake_idx]
@@ -14,7 +12,6 @@ def predict_with_threshold(model, X_scaled, threshold=0.7, wake_class="wake"):
 
 
 def get_adaptive_threshold(features_row, config, feature_cols):
-    """Compute adaptive threshold based on contrast features."""
     p25 = config.get("contrast_p25", 12.0)
     p75 = config.get("contrast_p75", 20.0)
     contrast_cols = [c for c in feature_cols if c.startswith("contrast_") and "std" not in c]
@@ -26,8 +23,6 @@ def get_adaptive_threshold(features_row, config, feature_cols):
 
 
 def load_artifacts(model_path=None, scaler_path=None, config_path=None):
-    """Load model, scaler, and inference config from disk."""
-    # Patch __main__ for pickles from legacy train_model.py (XGBWrapper)
     try:
         import __main__
         from .train import XGBWrapper
@@ -47,7 +42,6 @@ def load_artifacts(model_path=None, scaler_path=None, config_path=None):
 
 
 def predict_from_features(features_df, model, scaler, config, use_adaptive=True):
-    """Predict labels from feature DataFrame."""
     all_cols = config.get("all_feature_cols", config["feature_cols"])
     selected_mask = config.get("selected_mask")
     X_full = features_df[all_cols]
@@ -75,7 +69,6 @@ def predict_from_features(features_df, model, scaler, config, use_adaptive=True)
 
 
 class StreamingWakeDetector:
-    """Streaming detector with VAD gate, temporal smoothing, and cooldown."""
 
     def __init__(self, model, scaler, config, vad_enabled=True, vad_rms_threshold=0.01,
                  cooldown_windows=0, sequential_windows_override=None):
@@ -98,8 +91,6 @@ class StreamingWakeDetector:
         self._windows_in_cooldown = 0
 
     def process_window(self, features_1d, skip_vad=False):
-        """Process one window. Returns (triggered: bool, proba: float).
-        skip_vad: if True, bypass VAD (for testing)."""
         self._windows_in_cooldown = max(0, self._windows_in_cooldown - 1)
 
         if self.vad_enabled and not skip_vad:

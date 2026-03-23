@@ -1,4 +1,3 @@
-"""Backward compatibility: delegates to wakeword package. Run: python file_test_simulation.py [-t 0.70] [-s 2]"""
 import sys
 import argparse
 from pathlib import Path

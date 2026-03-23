@@ -1,4 +1,3 @@
-"""Backward compatibility: delegates to wakeword package. Run: python live_test.py"""
 import sys
 from pathlib import Path
 

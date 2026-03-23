@@ -1,4 +1,3 @@
-"""Collect hard negatives from hard_negatives.txt into hard_negatives/ folder."""
 import os
 import shutil
 from pathlib import Path
@@ -7,7 +6,6 @@ from .config import load_config, get_project_root
 
 
 def collect_hard_negatives():
-    """Copy files listed in hard_negatives.txt to hard_negatives/ directory."""
     cfg = load_config()
     root = get_project_root()
     hn_dir = root / cfg["paths"]["hard_negatives"]

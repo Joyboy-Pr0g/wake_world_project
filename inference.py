@@ -1,4 +1,3 @@
-"""Backward compatibility: re-exports from wakeword.inference"""
 import sys
 from pathlib import Path
 

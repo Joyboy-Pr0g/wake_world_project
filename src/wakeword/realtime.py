@@ -1,4 +1,3 @@
-"""Real-time microphone detection."""
 import sys
 import numpy as np
 
@@ -15,7 +14,6 @@ from .inference import load_artifacts, StreamingWakeDetector
 
 
 def features_to_dict(features_list, config):
-    """Convert feature list to dict, filtered by config columns."""
     d = dict(zip(FEATURE_COLUMNS, features_list))
     all_cols = config.get("all_feature_cols")
     if all_cols:
@@ -25,9 +23,6 @@ def features_to_dict(features_list, config):
 
 
 def run_realtime(threshold_override=None, smoothing_windows=None):
-    """Run real-time microphone wake word detection.
-    threshold_override: if set, use this (recommended 0.70).
-    smoothing_windows: require N consecutive high-confidence windows (default 2)."""
     cfg = load_config()
     rt_cfg = cfg.get("realtime", {})
     sr = rt_cfg.get("sample_rate", 16000)

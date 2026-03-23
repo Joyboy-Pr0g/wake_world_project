@@ -1,4 +1,3 @@
-"""Backward compatibility: delegates to wakeword package. Run: python create_dataset.py"""
 import sys
 from pathlib import Path
 
@@ -11,7 +10,6 @@ from wakeword.config import load_config
 from wakeword.dataset import build_dataset
 from wakeword.features import extract_features, FEATURE_COLUMNS
 
-# Re-export for scripts that do: from create_dataset import extract_features, FEATURE_COLUMNS
 __all__ = ["extract_features", "FEATURE_COLUMNS", "build_dataset"]
 
 

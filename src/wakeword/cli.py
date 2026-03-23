@@ -1,10 +1,8 @@
-"""CLI - can be invoked via 'wakeword' console script or python -m wakeword."""
 import sys
 import argparse
 import os
 from pathlib import Path
 
-# When installed via pip, wakeword is in site-packages. When run as __main__, we add src.
 if "wakeword" not in str(Path(__file__).resolve()):
     _src = Path(__file__).resolve().parent.parent
     if str(_src) not in sys.path:

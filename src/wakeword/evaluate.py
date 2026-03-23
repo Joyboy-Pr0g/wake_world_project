@@ -1,4 +1,3 @@
-"""Evaluation: ROC/PR curves, metrics, FP/hour, report generation."""
 import json
 from pathlib import Path
 from datetime import datetime
@@ -23,7 +22,6 @@ from .inference import load_artifacts
 
 
 def compute_metrics(y_true, y_pred, labels=None):
-    """Compute precision, recall, F1, accuracy, confusion matrix."""
     labels = labels or ["wake", "nonwake"]
     return {
         "accuracy": float(accuracy_score(y_true, y_pred)),
@@ -41,8 +39,6 @@ def compute_metrics(y_true, y_pred, labels=None):
 
 
 def fp_per_hour(n_fp, n_test_windows, window_sec=1.0, hop_sec=0.25):
-    """Estimate FP per hour given FP count and total windows.
-    Assumes sliding window: window_sec=1.0, hop_sec=0.25 -> 4 windows/sec."""
     windows_per_hour = 3600 / hop_sec
     if n_test_windows <= 0:
         return 0.0
@@ -60,7 +56,6 @@ def run_evaluation(
     threshold,
     output_dir=None,
 ):
-    """Full evaluation: ROC, PR, metrics, confusion matrix, FP/hour."""
     X_test_sel = X_test[:, selected_mask] if selected_mask is not None else X_test
     proba = model.predict_proba(X_test_sel)
     wake_idx = list(model.classes_).index("wake")
@@ -94,7 +89,6 @@ def run_evaluation(
     out = Path(output_dir) if output_dir else root / cfg["paths"].get("evaluation_dir", "evaluation_report")
     out.mkdir(parents=True, exist_ok=True)
 
-    # ROC curve
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
     ax1.plot(fpr, tpr, "b-", label=f"ROC (AUC={auc_roc:.3f})")
     ax1.plot([0, 1], [0, 1], "k--")
@@ -104,7 +98,6 @@ def run_evaluation(
     ax1.legend()
     ax1.grid(alpha=0.3)
 
-    # PR curve
     ax2.plot(rec, prec, "b-", label=f"PR (AP={auc_pr:.3f})")
     ax2.set_xlabel("Recall")
     ax2.set_ylabel("Precision")
@@ -116,7 +109,6 @@ def run_evaluation(
     plt.savefig(out / "roc_pr_curves.png", dpi=150, bbox_inches="tight")
     plt.close()
 
-    # Confusion matrix
     fig, ax = plt.subplots(figsize=(6, 4))
     import seaborn as sns
     sns.heatmap(cm, annot=True, fmt="d", xticklabels=labels, yticklabels=labels, cmap="Blues", ax=ax)
@@ -127,11 +119,8 @@ def run_evaluation(
     plt.savefig(out / "confusion_matrix_eval.png", dpi=150, bbox_inches="tight")
     plt.close()
 
-    # Report MD
     report_md = _format_report_md(metrics, threshold)
     (out / "report.md").write_text(report_md, encoding="utf-8")
-
-    # Report JSON
     (out / "report.json").write_text(json.dumps(metrics, indent=2), encoding="utf-8")
 
     return metrics, out
@@ -180,7 +169,6 @@ nonwake   {cm[1][0]:>6}  {cm[1][1]:>6}
 
 
 def run_evaluate_command():
-    """CLI: load model, dataset, run evaluation, save report."""
     cfg = load_config()
     root = get_project_root()
     paths = cfg["paths"]

@@ -1,4 +1,3 @@
-"""Backward compatibility: delegates to wakeword package. Run: python collect_hard_negatives.py"""
 import sys
 from pathlib import Path
 

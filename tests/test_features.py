@@ -1,4 +1,3 @@
-"""Tests for feature extraction."""
 import numpy as np
 import pytest
 
@@ -6,7 +5,6 @@ from wakeword.features import extract_features, FEATURE_COLUMNS, apply_reverb
 
 
 def test_extract_features_shape():
-    """Output length matches FEATURE_COLUMNS."""
     np.random.seed(42)
     sr = 16000
     audio = np.random.randn(sr).astype(np.float32) * 0.1
@@ -15,7 +13,6 @@ def test_extract_features_shape():
 
 
 def test_extract_features_padding():
-    """Short audio is padded to max_len."""
     np.random.seed(42)
     sr = 16000
     audio_short = np.random.randn(8000).astype(np.float32) * 0.1
@@ -24,7 +21,6 @@ def test_extract_features_padding():
 
 
 def test_extract_features_truncation():
-    """Long audio is truncated to max_len."""
     np.random.seed(42)
     sr = 16000
     audio_long = np.random.randn(32000).astype(np.float32) * 0.1
@@ -33,7 +29,6 @@ def test_extract_features_truncation():
 
 
 def test_extract_features_deterministic():
-    """Same audio yields same features."""
     np.random.seed(42)
     sr = 16000
     audio = np.random.randn(sr).astype(np.float32) * 0.1
@@ -43,7 +38,6 @@ def test_extract_features_deterministic():
 
 
 def test_apply_reverb_deterministic():
-    """Reverb is deterministic (uses fixed seed)."""
     np.random.seed(42)
     audio = np.random.randn(16000).astype(np.float32) * 0.1
     r1 = apply_reverb(audio, 16000)

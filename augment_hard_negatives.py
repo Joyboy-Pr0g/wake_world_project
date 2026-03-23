@@ -1,14 +1,5 @@
-"""
-Augment hard negative samples to reduce false positives.
-Run after train_model.py produces hard_negatives.txt.
-Adds pitch_shift and time_stretch variants of FP nonwake files to the dataset.
-"""
 import os
 import sys
-
-# Ensure we can append to dataset; run create_dataset after this adds new rows
-# This script outputs a list of augmented rows to append to dataset.csv
-# For a full pipeline: run create_dataset with an option to include hard negative augmentation
 
 DATASET_PATH = "dataset"
 sr = 16000
@@ -29,7 +20,6 @@ import librosa
 import numpy as np
 import pandas as pd
 
-# Reuse extract_features from create_dataset
 def extract_features(audio, sample_rate):
     if len(audio) < max_len:
         audio = np.pad(audio, (0, max_len - len(audio)))
@@ -71,12 +61,10 @@ contrast_cols = [f"contrast_{i}" for i in range(7)] + [f"contrast_std_{i}" for i
 columns = [f"mfcc_{i}" for i in range(13)] + [f"mfcc_std_{i}" for i in range(13)] + [f"delta_{i}" for i in range(13)] + contrast_cols + ["label"]
 new_df = pd.DataFrame(data, columns=columns)
 
-# Append to dataset.csv
 df = pd.read_csv("dataset.csv")
 df = pd.concat([df, new_df], ignore_index=True)
 df.to_csv("dataset.csv", index=False)
 
-# Append to manifest
 manifest_df = pd.read_csv("dataset_manifest.csv")
 manifest_df = pd.concat([manifest_df, pd.DataFrame(manifest, columns=["path", "label", "aug_type"])], ignore_index=True)
 manifest_df.to_csv("dataset_manifest.csv", index=False)

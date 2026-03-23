@@ -1,4 +1,3 @@
-"""Audio feature extraction."""
 import warnings
 
 warnings.filterwarnings("ignore", message="PySoundFile failed")
@@ -8,7 +7,6 @@ warnings.filterwarnings("ignore", message="Trying to estimate tuning")
 import librosa
 import numpy as np
 
-# Feature column names (computed from extract_features output)
 delta2_cols = [f"delta2_{i}" for i in range(13)] + [f"delta2_std_{i}" for i in range(13)]
 contrast_cols = [f"contrast_{i}" for i in range(7)] + [f"contrast_std_{i}" for i in range(7)]
 mel_cols = [f"mel_mean_{i}" for i in range(40)] + [f"mel_std_{i}" for i in range(40)]
@@ -24,7 +22,6 @@ FEATURE_COLUMNS = (
 
 
 def apply_reverb(audio, sr_audio, room_scale=0.25):
-    """Apply simple reverb effect."""
     impulse_len = int(sr_audio * room_scale)
     t = np.linspace(0, room_scale, impulse_len)
     rng = np.random.default_rng(seed=42)
@@ -35,7 +32,6 @@ def apply_reverb(audio, sr_audio, room_scale=0.25):
 
 
 def normalize_rms(audio, target_rms=0.05):
-    """Scale audio to target RMS for low-volume robustness. Returns copy."""
     rms = np.sqrt(np.mean(audio.astype(np.float64) ** 2))
     if rms < 1e-8:
         return audio.astype(np.float32)
@@ -44,8 +40,6 @@ def normalize_rms(audio, target_rms=0.05):
 
 
 def extract_features(audio, sample_rate, max_len=16000, normalize=True, target_rms=0.05):
-    """Extract feature vector from audio (MFCC, spectral contrast, mel, chroma, zcr, rms).
-    If normalize=True, apply RMS scaling for low-volume robustness."""
     if len(audio) < max_len:
         audio = np.pad(audio, (0, max_len - len(audio)))
     else:

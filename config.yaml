@@ -1,5 +1,3 @@
-# Wake Word Detection - Configuration
-# Paths and directories
 paths:
   dataset: "dataset"
   hard_negatives: "hard_negatives"
@@ -12,26 +10,21 @@ paths:
   confusion_matrix: "confusion_matrix.png"
   test_samples: "test_samples"
 
-# Audio & feature extraction
 audio:
   sample_rate: 16000
-  max_len_samples: 16000  # 1 second at 16 kHz
+  max_len_samples: 16000
   n_mfcc: 13
   n_mels: 40
   n_bands_contrast: 6
-  # RMS normalization for low-volume robustness (scale quiet audio up)
   normalize_rms: true
   target_rms: 0.05
-  # Note: Retrain (dataset + train) after changing these to keep train/inference consistent
 
-# Labels
 labels:
   - wake
   - nonwake
 
-# Dataset augmentation
 dataset:
-  wake_augmentations:  # 10 variants per wake file
+  wake_augmentations:
     - { type: original }
     - { type: pitch_shift, n_steps: 2 }
     - { type: pitch_shift, n_steps: -2 }
@@ -47,13 +40,11 @@ dataset:
   reverb_room_scale: 0.25
   noise_scale: 0.005
 
-# Training
 train:
   random_state: 42
   test_size: 0.2
   val_size: 0.15
   n_features_rfe: 80
-  # 0=nonwake, 1=wake (sklearn encodes alphabetically). Higher weight = penalize FP more.
   class_weights: { 0: 2.0, 1: 1.0 }
   drop_cols:
     - mfcc_0
@@ -66,7 +57,6 @@ train:
   threshold_search_max: 0.71
   threshold_search_step: 0.01
 
-# Real-time detection
 realtime:
   sample_rate: 16000
   chunk_samples: 16000
@@ -78,7 +68,6 @@ realtime:
   vad_zcr_threshold: 0.02
   cooldown_seconds: 2.0
 
-# File-based test
 file_test:
   sample_rate: 16000
   window_samples: 16000

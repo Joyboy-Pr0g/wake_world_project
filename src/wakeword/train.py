@@ -1,4 +1,3 @@
-"""Model training pipeline."""
 import warnings
 from sklearn.exceptions import UndefinedMetricWarning
 warnings.filterwarnings("ignore", category=UndefinedMetricWarning)
@@ -37,7 +36,6 @@ from .config import load_config, get_project_root
 
 
 class XGBWrapper(BaseEstimator, ClassifierMixin):
-    """XGBoost wrapper for sklearn compatibility."""
 
     def __init__(self, n_estimators=200, max_depth=6, learning_rate=0.05, scale_pos_weight=1, random_state=42):
         self.n_estimators = n_estimators
@@ -81,7 +79,6 @@ class XGBWrapper(BaseEstimator, ClassifierMixin):
 
 
 def train_model():
-    """Run full training pipeline: load data, train ensemble, save artifacts."""
     cfg = load_config()
     root = get_project_root()
     train_cfg = cfg["train"]
@@ -201,7 +198,6 @@ def train_model():
         cv=5, n_jobs=-1,
     )
     stack.fit(X_train_sel, y_train_bal)
-    # Probability calibration: makes confidence scores more honest
     model = CalibratedClassifierCV(stack, cv=5, method="isotonic", n_jobs=-1)
     model.fit(X_train_sel, y_train_bal)
 
@@ -291,7 +287,6 @@ def train_model():
     wake_recall = int(((y_test == "wake") & (y_pred == "wake")).sum()) / max(int((y_test == "wake").sum()), 1)
     print(f"\n>>> Wake recall: {wake_recall:.1%}  Accuracy: {acc:.3f}  Threshold: {optimal_threshold:.3f} <<<")
 
-    # Run full evaluation (ROC, PR, report)
     try:
         from .evaluate import run_evaluation
         all_cols = X_train.columns.tolist()

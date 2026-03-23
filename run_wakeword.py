@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-"""Run wakeword CLI without installing. Usage: python run_wakeword.py <command> [args]"""
 import sys
 from pathlib import Path
 

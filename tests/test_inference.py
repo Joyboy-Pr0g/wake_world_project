@@ -1,4 +1,3 @@
-"""Tests for inference path and threshold/cooldown logic."""
 import numpy as np
 import pytest
 from sklearn.base import BaseEstimator, ClassifierMixin
@@ -7,7 +6,6 @@ from wakeword.inference import StreamingWakeDetector, predict_with_threshold
 
 
 class MockModel(BaseEstimator, ClassifierMixin):
-    """Always returns configurable proba for wake."""
 
     def __init__(self, wake_proba=0.6):
         self.wake_proba = wake_proba
@@ -27,7 +25,6 @@ def dummy_model():
 
 @pytest.fixture
 def mock_scaler():
-    """Fitted scaler for 10 features."""
     from sklearn.preprocessing import StandardScaler
     sc = StandardScaler()
     sc.fit(np.random.randn(20, 10))
@@ -48,7 +45,6 @@ def mock_config():
 
 
 def test_predict_with_threshold(dummy_model):
-    """Threshold filters predictions correctly."""
     high_model = MockModel(wake_proba=0.9)
     low_model = MockModel(wake_proba=0.2)
     X = np.ones((5, 10))
@@ -59,7 +55,6 @@ def test_predict_with_threshold(dummy_model):
 
 
 def test_streaming_detector_sequential(dummy_model, mock_scaler, mock_config):
-    """Requires N consecutive high windows."""
     detector = StreamingWakeDetector(
         dummy_model, mock_scaler, mock_config,
         vad_enabled=False,
@@ -77,7 +72,6 @@ def test_streaming_detector_sequential(dummy_model, mock_scaler, mock_config):
 
 
 def test_streaming_detector_reset(dummy_model, mock_scaler, mock_config):
-    """Reset clears consecutive count."""
     detector = StreamingWakeDetector(
         dummy_model, mock_scaler, mock_config,
         vad_enabled=False,
@@ -91,7 +85,6 @@ def test_streaming_detector_reset(dummy_model, mock_scaler, mock_config):
 
 
 def test_streaming_detector_cooldown(dummy_model, mock_scaler, mock_config):
-    """Cooldown blocks immediate re-trigger."""
     detector = StreamingWakeDetector(
         dummy_model, mock_scaler, mock_config,
         vad_enabled=False,
