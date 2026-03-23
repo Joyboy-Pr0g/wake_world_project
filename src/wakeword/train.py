@@ -9,6 +9,7 @@ from sklearn.model_selection import GridSearchCV, GroupShuffleSplit
 from sklearn.svm import SVC
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier, StackingClassifier
 from sklearn.linear_model import LogisticRegression
+from sklearn.calibration import CalibratedClassifierCV
 from sklearn.feature_selection import RFE
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 from sklearn.preprocessing import StandardScaler, LabelEncoder
@@ -145,22 +146,27 @@ def train_model():
     thr_max = train_cfg["threshold_search_max"]
     thr_step = train_cfg["threshold_search_step"]
     min_wr = train_cfg["min_wake_recall"]
+    cw_raw = train_cfg.get("class_weights", {0: 2.0, 1: 1.0})
+    class_weights = {int(k): float(v) for k, v in cw_raw.items()}
+
+    le = LabelEncoder()
+    y_train_enc = le.fit_transform(y_train_bal)
 
     svc_grid = GridSearchCV(
-        SVC(kernel="rbf", probability=True, class_weight="balanced"),
+        SVC(kernel="rbf", probability=True, class_weight=class_weights),
         {"C": [0.1, 1, 10, 100], "gamma": [1e-3, 1e-4, "scale"]},
         cv=5, scoring="recall_macro", n_jobs=-1, verbose=1,
     )
-    svc_grid.fit(X_train_sel, y_train_bal)
+    svc_grid.fit(X_train_sel, y_train_enc)
 
     RFCls = BalancedRandomForestClassifier if USE_BALANCED_RF else RandomForestClassifier
-    rf_kwargs = {"random_state": rs} if USE_BALANCED_RF else {"class_weight": "balanced", "random_state": rs}
+    rf_kwargs = {"random_state": rs} if USE_BALANCED_RF else {"class_weight": class_weights, "random_state": rs}
     rf_grid = GridSearchCV(
         RFCls(**rf_kwargs),
         {"n_estimators": [150, 250], "max_depth": [12, 16, 20], "min_samples_leaf": [2, 3]},
         cv=5, scoring="recall_macro", n_jobs=-1, verbose=1,
     )
-    rf_grid.fit(X_train_sel, y_train_bal)
+    rf_grid.fit(X_train_sel, y_train_enc)
 
     if USE_XGB:
         scale_pos = (y_train_bal == "nonwake").sum() / max((y_train_bal == "wake").sum(), 1)
@@ -189,11 +195,14 @@ def train_model():
             ("gbc", gbc_grid.best_estimator_),
         ]
 
-    model = StackingClassifier(
+    stack = StackingClassifier(
         estimators=estimators_for_stack,
-        final_estimator=LogisticRegression(random_state=rs, max_iter=1000, class_weight="balanced"),
+        final_estimator=LogisticRegression(random_state=rs, max_iter=1000, class_weight=class_weights),
         cv=5, n_jobs=-1,
     )
+    stack.fit(X_train_sel, y_train_bal)
+    # Probability calibration: makes confidence scores more honest
+    model = CalibratedClassifierCV(stack, cv=5, method="isotonic", n_jobs=-1)
     model.fit(X_train_sel, y_train_bal)
 
     wake_idx = list(model.classes_).index("wake") if "wake" in model.classes_ else 1

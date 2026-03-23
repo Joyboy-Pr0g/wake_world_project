@@ -24,9 +24,10 @@ def features_to_dict(features_list, config):
     return {k: d[k] for k in FEATURE_COLUMNS if k not in drop and k in d}
 
 
-def run_realtime(threshold_override=None):
+def run_realtime(threshold_override=None, smoothing_windows=None):
     """Run real-time microphone wake word detection.
-    threshold_override: if set, use this instead of config (e.g. 0.75 to reduce FPs)."""
+    threshold_override: if set, use this (recommended 0.70).
+    smoothing_windows: require N consecutive high-confidence windows (default 2)."""
     cfg = load_config()
     rt_cfg = cfg.get("realtime", {})
     sr = rt_cfg.get("sample_rate", 16000)
@@ -43,11 +44,13 @@ def run_realtime(threshold_override=None):
     if threshold_override is not None:
         config = dict(config)
         config["sequential_threshold"] = threshold_override
+    n_consecutive = smoothing_windows if smoothing_windows is not None else rt_cfg.get("sequential_windows", 2)
     detector = StreamingWakeDetector(
         model, scaler, config,
         vad_enabled=vad_enabled,
         vad_rms_threshold=vad_rms,
         cooldown_windows=cooldown_windows,
+        sequential_windows_override=n_consecutive,
     )
 
     p = pyaudio.PyAudio()
@@ -61,7 +64,7 @@ def run_realtime(threshold_override=None):
 
     buffer = np.zeros(buffer_size, dtype=np.float32)
     print("Listening... (Ctrl+C to stop)")
-    print("Say your wake word twice in a row to trigger.\n")
+    print(f"Requires {n_consecutive} consecutive windows above threshold to trigger.\n")
 
     try:
         while True:

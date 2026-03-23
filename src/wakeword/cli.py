@@ -31,11 +31,17 @@ def main():
 
     def cmd_realtime(args):
         load_config(args.config)
-        run_realtime(threshold_override=getattr(args, "threshold", None))
+        run_realtime(
+            threshold_override=getattr(args, "threshold", None),
+            smoothing_windows=getattr(args, "smoothing", None),
+        )
 
     def cmd_file_test(args):
         load_config(args.config)
-        run_file_test(threshold_override=getattr(args, "threshold", None))
+        run_file_test(
+            threshold_override=getattr(args, "threshold", None),
+            smoothing_windows=getattr(args, "smoothing", 2),
+        )
 
     def cmd_collect(args):
         load_config(args.config)
@@ -73,10 +79,12 @@ Commands:
     subparsers.add_parser("dataset", help="Build dataset").set_defaults(func=cmd_dataset)
     subparsers.add_parser("train", help="Train model").set_defaults(func=cmd_train)
     p_realtime = subparsers.add_parser("realtime", help="Live mic detection")
-    p_realtime.add_argument("-t", "--threshold", type=float, default=None, help="Override threshold (e.g. 0.75)")
+    p_realtime.add_argument("-t", "--threshold", type=float, default=None, help="Threshold (recommended: 0.70)")
+    p_realtime.add_argument("-s", "--smoothing", type=int, default=None, help="Consecutive windows required (default: 2)")
     p_realtime.set_defaults(func=cmd_realtime)
     p_ft = subparsers.add_parser("file-test", help="Test files in test_samples/")
-    p_ft.add_argument("-t", "--threshold", type=float, default=None, help="Override threshold (e.g. 0.75)")
+    p_ft.add_argument("-t", "--threshold", type=float, default=None, help="Threshold (recommended: 0.70)")
+    p_ft.add_argument("-s", "--smoothing", type=int, default=2, help="Consecutive windows required (default: 2)")
     p_ft.set_defaults(func=cmd_file_test)
     subparsers.add_parser("collect", help="Copy hard_negatives.txt to hard_negatives/").set_defaults(func=cmd_collect)
     subparsers.add_parser("evaluate", help="Generate evaluation report").set_defaults(func=cmd_evaluate)

@@ -58,9 +58,23 @@ def process_file(path, model, scaler, config, sr, window_size, hop_size, normali
     return all_probs
 
 
-def run_file_test(threshold_override=None):
+def _has_consecutive_high(probs, threshold, n_consecutive):
+    """True if probs has at least n_consecutive consecutive values above threshold."""
+    run = 0
+    for p in probs:
+        if p > threshold:
+            run += 1
+            if run >= n_consecutive:
+                return True
+        else:
+            run = 0
+    return False
+
+
+def run_file_test(threshold_override=None, smoothing_windows=2):
     """Run file-based test on test_samples/ directory.
-    threshold_override: if set, use this instead of config threshold (e.g. 0.75 to reduce FPs)."""
+    threshold_override: if set, use this (recommended 0.70).
+    smoothing_windows: require N consecutive high-confidence windows to trigger (default 2)."""
     from .config import get_project_root
     cfg = load_config()
     root = get_project_root()
@@ -80,9 +94,10 @@ def run_file_test(threshold_override=None):
 
     print("Loading model, scaler, inference_config...")
     model, scaler, config = load_artifacts()
-    threshold = threshold_override if threshold_override is not None else config.get("threshold", 0.5)
+    threshold = threshold_override if threshold_override is not None else config.get("threshold", 0.70)
     feature_cols = config.get("feature_cols", [])
     print(f"Using threshold: {threshold:.3f}" + (" (override)" if threshold_override is not None else ""))
+    print(f"Temporal smoothing: {smoothing_windows} consecutive windows required")
     print(f"Selected features: {len(feature_cols)}")
     print(f"\nScanning {test_dir}/ for .wav files...\n")
 
@@ -100,12 +115,13 @@ def run_file_test(threshold_override=None):
             continue
         max_prob = max(probs)
         confidence_pct = max_prob * 100
-        prediction = "wake" if max_prob > threshold else "nonwake"
+        triggered = _has_consecutive_high(probs, threshold, smoothing_windows)
+        prediction = "wake" if triggered else "nonwake"
         print("-" * 50)
         safe_print(f"File: {fname}")
-        print(f"  Wake Confidence: {confidence_pct:.1f}%")
+        print(f"  Wake Confidence (max): {confidence_pct:.1f}%")
         print(f"  Prediction: {prediction}")
-        if prediction == "wake":
+        if triggered:
             print()
             print("\033[92m" + "=" * 50)
             print("  TRIGGERED: Hey Pakize detected!")

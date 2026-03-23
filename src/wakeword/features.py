@@ -12,11 +12,14 @@ import numpy as np
 delta2_cols = [f"delta2_{i}" for i in range(13)] + [f"delta2_std_{i}" for i in range(13)]
 contrast_cols = [f"contrast_{i}" for i in range(7)] + [f"contrast_std_{i}" for i in range(7)]
 mel_cols = [f"mel_mean_{i}" for i in range(40)] + [f"mel_std_{i}" for i in range(40)]
+mel_band_energy_cols = [f"mel_band_energy_{i}" for i in range(40)]
 chroma_cols = [f"chroma_mean_{i}" for i in range(12)]
 FEATURE_COLUMNS = (
     [f"mfcc_{i}" for i in range(13)] + [f"mfcc_std_{i}" for i in range(13)]
     + [f"delta_{i}" for i in range(13)] + delta2_cols + contrast_cols
-    + ["zcr_mean", "zcr_std", "rms_mean"] + mel_cols + chroma_cols
+    + ["zcr_mean", "zcr_std", "rms_mean"]
+    + ["spectral_centroid_mean", "spectral_centroid_std", "spectral_rolloff_mean", "spectral_rolloff_std"]
+    + mel_cols + mel_band_energy_cols + chroma_cols
 )
 
 
@@ -69,6 +72,14 @@ def extract_features(audio, sample_rate, max_len=16000, normalize=True, target_r
     mel_db = librosa.power_to_db(mel)
     mel_mean = np.mean(mel_db, axis=1)
     mel_std = np.std(mel_db, axis=1)
+    mel_band_energy = np.mean(mel, axis=1)
+
+    spectral_centroid = librosa.feature.spectral_centroid(y=audio, sr=sample_rate)
+    spectral_centroid_mean = float(np.mean(spectral_centroid))
+    spectral_centroid_std = float(np.std(spectral_centroid))
+    spectral_rolloff = librosa.feature.spectral_rolloff(y=audio, sr=sample_rate)
+    spectral_rolloff_mean = float(np.mean(spectral_rolloff))
+    spectral_rolloff_std = float(np.std(spectral_rolloff))
 
     chroma = librosa.feature.chroma_stft(y=audio, sr=sample_rate)
     chroma_mean = np.mean(chroma, axis=1)
@@ -80,5 +91,7 @@ def extract_features(audio, sample_rate, max_len=16000, normalize=True, target_r
         list(mfcc_mean) + list(mfcc_std) + list(delta_mean) + list(delta2_mean) + list(delta2_std)
         + list(contrast_mean) + list(contrast_std)
         + [zcr_mean, zcr_std, rms_mean]
-        + list(mel_mean) + list(mel_std) + list(chroma_mean)
+        + [spectral_centroid_mean, spectral_centroid_std, spectral_rolloff_mean, spectral_rolloff_std]
+        + list(mel_mean) + list(mel_std) + list(mel_band_energy)
+        + list(chroma_mean)
     )

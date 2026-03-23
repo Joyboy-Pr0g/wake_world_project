@@ -43,6 +43,7 @@ dataset:
     - { type: noise }
     - { type: reverb }
   hard_neg_aug_count: 15
+  hard_neg_noise_level: 0.03
   reverb_room_scale: 0.25
   noise_scale: 0.005
 
@@ -51,7 +52,9 @@ train:
   random_state: 42
   test_size: 0.2
   val_size: 0.15
-  n_features_rfe: 65
+  n_features_rfe: 80
+  # 0=nonwake, 1=wake (sklearn encodes alphabetically). Higher weight = penalize FP more.
+  class_weights: { 0: 2.0, 1: 1.0 }
   drop_cols:
     - mfcc_0
     - mfcc_std_0

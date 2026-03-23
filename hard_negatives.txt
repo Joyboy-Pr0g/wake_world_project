@@ -1,19 +1,15 @@
 # Nonwake files incorrectly predicted as Wake
 C:\Users\HP\PyCharmMiscProject\wake_world_project\dataset\nonwake\Abdulhakim_Sanli_nowake1.wav
-C:\Users\HP\PyCharmMiscProject\wake_world_project\dataset\nonwake\Ahmet_Selim_Kucukaydin_nowake_2.wav
 C:\Users\HP\PyCharmMiscProject\wake_world_project\dataset\nonwake\Alpha_Cisse_nowake_1.wav
 C:\Users\HP\PyCharmMiscProject\wake_world_project\dataset\nonwake\aly_abdelhalim_nonwake_2.wav
 C:\Users\HP\PyCharmMiscProject\wake_world_project\dataset\nonwake\Arshad_qurishy_nowake_1.wav
 C:\Users\HP\PyCharmMiscProject\wake_world_project\dataset\nonwake\Baris_Aslan_Nowake_1.wav
 C:\Users\HP\PyCharmMiscProject\wake_world_project\dataset\nonwake\Berkan_Öksüz_Nowake_2.wav
 C:\Users\HP\PyCharmMiscProject\wake_world_project\dataset\nonwake\Betul_kis_nowake_2.wav
-C:\Users\HP\PyCharmMiscProject\wake_world_project\dataset\nonwake\busra_basan_nowake_2.wav
 C:\Users\HP\PyCharmMiscProject\wake_world_project\dataset\nonwake\Cigdem_Kurt_nowake_1.wav
 C:\Users\HP\PyCharmMiscProject\wake_world_project\dataset\nonwake\Ensar_Celil_AVCI_nowake_2.wav
 C:\Users\HP\PyCharmMiscProject\wake_world_project\dataset\nonwake\Fatih_Arslan_nowake1.wav
 C:\Users\HP\PyCharmMiscProject\wake_world_project\dataset\nonwake\Fatih_Arslan_nowake2.wav
-C:\Users\HP\PyCharmMiscProject\wake_world_project\dataset\nonwake\FatmaSila_Yurdakul_nowake_1.wav
-C:\Users\HP\PyCharmMiscProject\wake_world_project\dataset\nonwake\Fehmican_Engin_nonwake_1.wav
 C:\Users\HP\PyCharmMiscProject\wake_world_project\dataset\nonwake\Goksu_Kesen_nonwake_1.wav
 C:\Users\HP\PyCharmMiscProject\wake_world_project\dataset\nonwake\Goksu_Kesen_nonwake_2.wav
 C:\Users\HP\PyCharmMiscProject\wake_world_project\dataset\nonwake\gurkan_keles_nowake_2.wav
@@ -35,7 +31,6 @@ C:\Users\HP\PyCharmMiscProject\wake_world_project\dataset\nonwake\Osman_Abak_now
 C:\Users\HP\PyCharmMiscProject\wake_world_project\dataset\nonwake\Salih_Karakus_nonwake_1.wav
 C:\Users\HP\PyCharmMiscProject\wake_world_project\dataset\nonwake\Salih_Karakus_nonwake_2.wav
 C:\Users\HP\PyCharmMiscProject\wake_world_project\dataset\nonwake\sevim_sude_sanli_nowake1.wav
-C:\Users\HP\PyCharmMiscProject\wake_world_project\dataset\nonwake\sevval_nur_iclek_nowake_1.wav
 C:\Users\HP\PyCharmMiscProject\wake_world_project\dataset\nonwake\Sumeyye_Gursoy_nowake_1.wav
 C:\Users\HP\PyCharmMiscProject\wake_world_project\dataset\nonwake\Tugce_Deniz_nowake_2.wav
 C:\Users\HP\PyCharmMiscProject\wake_world_project\dataset\nonwake\Yasemin_Demir_NoWake_2.wav
@@ -43,6 +38,10 @@ C:\Users\HP\PyCharmMiscProject\wake_world_project\dataset\nonwake\Yunus_Akinci_n
 C:\Users\HP\PyCharmMiscProject\wake_world_project\dataset\nonwake\yusuf_safa_kilic_nowake_1.wav
 C:\Users\HP\PyCharmMiscProject\wake_world_project\dataset\nonwake\Yusuf_Selim_Yilmaz_nowake_1.wav
 C:\Users\HP\PyCharmMiscProject\wake_world_project\dataset\nonwake\Yusuf_Selim_Yilmaz_nowake_2.wav
+C:\Users\HP\PyCharmMiscProject\wake_world_project\hard_negatives\Betul_kis_nowake_2.wav
 C:\Users\HP\PyCharmMiscProject\wake_world_project\hard_negatives\Goksu_Kesen_nonwake_2.wav
+C:\Users\HP\PyCharmMiscProject\wake_world_project\hard_negatives\hamza_kurtuldu_nowake_1.wav
+C:\Users\HP\PyCharmMiscProject\wake_world_project\hard_negatives\Mustafa_Sakalli_nowake1.wav
 C:\Users\HP\PyCharmMiscProject\wake_world_project\hard_negatives\ramazan_mehmet_uzun_nonwake_1.wav
+C:\Users\HP\PyCharmMiscProject\wake_world_project\hard_negatives\serhat_aylanc_nowake1.wav
 C:\Users\HP\PyCharmMiscProject\wake_world_project\hard_negatives\yusuf_safa_kilic_nowake_1.wav

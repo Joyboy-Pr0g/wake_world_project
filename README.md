@@ -114,6 +114,17 @@ python run_wakeword.py <command>
 wakeword <command>
 ```
 
+### Main Commands
+
+| Task | Command |
+|------|---------|
+| Live mic detection | `python run_wakeword.py realtime -t 0.70 -s 2` |
+| Test .wav files | `python run_wakeword.py file-test -t 0.70 -s 2` |
+| Rebuild dataset | `python run_wakeword.py dataset` |
+| Train model | `python run_wakeword.py train` |
+| Evaluation report | `python run_wakeword.py evaluate` |
+| Mine hard negatives | `python run_wakeword.py mine -t 0.5` |
+
 ### Configuration
 
 Edit `config.yaml` to adjust:

@@ -75,17 +75,21 @@ def predict_from_features(features_df, model, scaler, config, use_adaptive=True)
 
 
 class StreamingWakeDetector:
-    """Streaming detector with VAD gate and cooldown."""
+    """Streaming detector with VAD gate, temporal smoothing, and cooldown."""
 
     def __init__(self, model, scaler, config, vad_enabled=True, vad_rms_threshold=0.01,
-                 cooldown_windows=0):
+                 cooldown_windows=0, sequential_windows_override=None):
         self.model = model
         self.scaler = scaler
         self.config = config
         self.wake_idx = list(model.classes_).index("wake")
         cfg = load_config()
         rt_cfg = cfg.get("realtime", {})
-        self.n_required = config.get("sequential_windows", rt_cfg.get("sequential_windows", 2))
+        self.n_required = (
+            sequential_windows_override
+            if sequential_windows_override is not None
+            else config.get("sequential_windows", rt_cfg.get("sequential_windows", 2))
+        )
         self.seq_threshold = config.get("sequential_threshold", 0.5)
         self._consecutive_high = 0
         self.vad_enabled = vad_enabled if vad_enabled is not None else rt_cfg.get("vad_enabled", False)

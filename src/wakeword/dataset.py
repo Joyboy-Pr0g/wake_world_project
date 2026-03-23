@@ -18,13 +18,29 @@ def _get_audio_config():
     )
 
 
+def _add_background_noise(audio, rng, noise_type="white", level=0.03):
+    """Add background noise: white, or fan-like (low-pass filtered white)."""
+    if noise_type == "white":
+        noise = rng.standard_normal(len(audio)).astype(np.float32) * level * np.std(audio)
+        return audio + noise
+    elif noise_type == "fan":
+        white = rng.standard_normal(len(audio)).astype(np.float32)
+        kernel_len = min(61, len(audio) // 4)
+        kernel = np.ones(kernel_len, dtype=np.float32) / kernel_len
+        fan = np.convolve(white, kernel, mode="same")
+        fan = fan / (np.std(fan) + 1e-8) * level * np.std(audio)
+        return audio + fan.astype(np.float32)
+    return audio
+
+
 def augment_hard_negatives():
-    """Load and augment hard negative samples. Returns (data_rows, manifest_rows)."""
+    """Load and augment hard negative samples with background noise. Returns (data_rows, manifest_rows)."""
     cfg = load_config()
     root = get_project_root()
     hn_dir = root / cfg["paths"]["hard_negatives"]
     sr, max_len, norm_rms, target_rms = _get_audio_config()
     hn_aug_count = cfg["dataset"]["hard_neg_aug_count"]
+    hn_noise_level = cfg["dataset"].get("hard_neg_noise_level", 0.03)
 
     if not hn_dir.is_dir():
         return [], []
@@ -48,9 +64,14 @@ def augment_hard_negatives():
                 aug = librosa.effects.pitch_shift(y=aug, sr=sr, n_steps=n_steps)
             rate = float(rng.uniform(0.9, 1.1))
             aug = librosa.effects.time_stretch(y=aug, rate=rate)
-            noise = rng.standard_normal(len(aug)) * 0.01 * np.std(aug)
-            aug = aug + noise.astype(np.float32)
-            row = extract_features(aug, sr, max_len) + ["nonwake", source_path]
+            noise_small = rng.standard_normal(len(aug)) * 0.01 * np.std(aug)
+            aug = aug + noise_small.astype(np.float32)
+            noise_type = rng.choice(["white", "fan", "none"])
+            if noise_type == "white":
+                aug = _add_background_noise(aug, rng, "white", level=hn_noise_level)
+            elif noise_type == "fan":
+                aug = _add_background_noise(aug, rng, "fan", level=hn_noise_level)
+            row = extract_features(aug, sr, max_len, normalize=norm_rms, target_rms=target_rms) + ["nonwake", source_path]
             hndata.append(row)
             hnmanifest.append((source_path, "nonwake", f"hard_neg_aug_{i}"))
     return hndata, hnmanifest
