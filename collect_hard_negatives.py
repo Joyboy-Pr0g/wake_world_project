@@ -1,32 +1,19 @@
-import os
-import shutil
+"""Backward compatibility: delegates to wakeword package. Run: python collect_hard_negatives.py"""
+import sys
+from pathlib import Path
 
-HARD_NEG_DIR = "hard_negatives"
-HARD_NEG_TXT = "hard_negatives.txt"
+root = Path(__file__).parent
+src = root / "src"
+if str(src) not in sys.path:
+    sys.path.insert(0, str(src))
+
+from wakeword.config import load_config
+from wakeword.collect import collect_hard_negatives
 
 
 def main():
-    if not os.path.isfile(HARD_NEG_TXT):
-        print(f"{HARD_NEG_TXT} not found. Run train_model.py first to generate it.")
-        return
-    os.makedirs(HARD_NEG_DIR, exist_ok=True)
-    count = 0
-    with open(HARD_NEG_TXT, "r", encoding="utf-8") as f:
-        for line in f:
-            line = line.strip()
-            if not line or line.startswith("#"):
-                continue
-            src = line.replace("/", os.sep)
-            if not os.path.isfile(src):
-                print(f"Skip (not found): {src}")
-                continue
-            fname = os.path.basename(src)
-            dst = os.path.join(HARD_NEG_DIR, fname)
-            if os.path.normpath(src) == os.path.normpath(dst):
-                continue
-            shutil.copy2(src, dst)
-            count += 1
-    print(f"Copied {count} files to {HARD_NEG_DIR}/")
+    load_config()
+    collect_hard_negatives()
 
 
 if __name__ == "__main__":

@@ -16,6 +16,28 @@ pipwin install pyaudio
 
 ## Pipeline (run in this order)
 
+### Option A: New unified CLI
+
+```powershell
+python run_wakeword.py dataset    # Build dataset
+python run_wakeword.py train     # Train model (+ evaluation report)
+python run_wakeword.py evaluate  # Standalone evaluation (ROC/PR, FP/hour)
+python run_wakeword.py mine      # Copy nonwake FPs (>50% conf) to hard_negatives/
+python run_wakeword.py collect   # Copy hard_negatives.txt to hard_negatives/
+python run_wakeword.py realtime  # Live mic (VAD + cooldown)
+python run_wakeword.py file-test -t 0.75  # Test with threshold override (reduce FPs)
+```
+
+Or after `pip install -e .`:
+```powershell
+wakeword dataset
+wakeword train
+wakeword collect
+wakeword realtime
+```
+
+### Option B: Original scripts (backward compatible)
+
 | Step | Script | Purpose |
 |------|--------|---------|
 | 1 | `python create_dataset.py` | Build dataset from `dataset/wake/` and `dataset/nonwake/`, add hard negative augmentation from `hard_negatives/` |

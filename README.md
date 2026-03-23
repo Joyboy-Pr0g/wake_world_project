@@ -1,28 +1,58 @@
 # Wake Word Detection
 
-Real-time wake word detection using a stacking ensemble (SVC, Random Forest, XGBoost) trained on audio features (MFCC, spectral contrast, mel spectrogram, etc.).
+Real-time wake word detection ("Hey Pakize") using a stacking ensemble trained on acoustic features. Designed for low-latency, offline-capable deployment.
+
+---
+
+## Overview
+
+This project implements a keyword spotting (KWS) system that:
+
+- Detects a custom wake phrase in real time from microphone input
+- Uses traditional ML (no deep learning) for fast inference and small footprint
+- Supports an iterative workflow to reduce false positives via hard negative mining
+- Produces evaluation reports (ROC/PR curves, FP/hour) for tuning
+
+---
+
+## Architecture
+
+```
+┌─────────────┐     ┌──────────────┐     ┌─────────────┐
+│  Microphone │────▶│ Sliding 1s   │────▶│ Feature     │
+│  (16 kHz)   │     │ window 0.25s │     │ Extraction  │
+└─────────────┘     └──────────────┘     └──────┬──────┘
+                                                 │
+                                                 ▼
+┌─────────────┐     ┌──────────────┐     ┌─────────────┐
+│   Trigger   │◀────│ N consecutive│◀────│ Stacking    │
+│   (output)  │     │ windows > θ  │     │ Ensemble    │
+└─────────────┘     └──────────────┘     └─────────────┘
+```
+
+### Components
+
+| Component | Description |
+|-----------|-------------|
+| **Features** | MFCC (13), deltas, spectral contrast (7), mel (40), chroma (12), ZCR, RMS |
+| **Model** | Stacking: SVC + Random Forest + XGBoost → Logistic Regression |
+| **Inference** | Threshold tuning, optional VAD gate, cooldown after trigger |
+| **Config** | Single `config.yaml` for paths, audio, training, realtime params |
+
+### Pipeline
+
+1. **Dataset** – Build feature CSV from `dataset/wake/` and `dataset/nonwake/` with augmentation
+2. **Train** – SMOTE, RFE (65 features), GridSearchCV, threshold optimization
+3. **Collect** – Copy false positives to `hard_negatives/` for next iteration
+4. **Evaluate** – ROC/PR curves, metrics, FP/hour estimate
+5. **Realtime** – Live mic with VAD, cooldown, sequential window requirement
 
 ---
 
 ## Requirements
 
-- Python 3.8+
-
-### Required Libraries
-
-| Library | Version | Purpose |
-|---------|---------|---------|
-| librosa | ≥ 0.10.0 | Audio loading and feature extraction |
-| soundfile | ≥ 0.12.0 | WAV/FLAC loading (fixes PySoundFile failed warning) |
-| numpy | ≥ 1.23.0 | Numerical operations |
-| pandas | ≥ 1.5.0 | Dataset handling |
-| scikit-learn | ≥ 1.2.0 | ML models, scaling, cross-validation |
-| imbalanced-learn | ≥ 0.11.0 | SMOTE, BalancedRandomForest |
-| xgboost | ≥ 2.0.0 | Gradient boosting in ensemble |
-| joblib | ≥ 1.2.0 | Model and config serialization |
-| matplotlib | ≥ 3.6.0 | Plotting (confusion matrix) |
-| seaborn | ≥ 0.12.0 | Heatmap visualization |
-| pyaudio | ≥ 0.2.13 | Microphone input for live detection |
+- **Python** 3.8+
+- See `requirements.txt` for pinned versions
 
 ---
 
@@ -32,28 +62,103 @@ Real-time wake word detection using a stacking ensemble (SVC, Random Forest, XGB
 pip install -r requirements.txt
 ```
 
-### FFmpeg (optional, system install)
+**Optional:** Install in editable mode for CLI:
 
-If you use **MP3 or other non-WAV formats**, install FFmpeg so librosa can load them via audioread:
+```powershell
+pip install -e .
+```
 
-- **Windows:** [ffmpeg.org](https://ffmpeg.org/download.html) or `winget install FFmpeg`
-- **macOS:** `brew install ffmpeg`
-- **Linux:** `apt install ffmpeg` or `yum install ffmpeg`
-
-For **WAV files only**, `soundfile` in requirements.txt is sufficient.
-
-### Windows – If `pyaudio` fails
+**Windows – pyaudio:** If `pip install pyaudio` fails:
 
 ```powershell
 pip install pipwin
 pipwin install pyaudio
 ```
 
-### Alternative: install libraries manually
+**FFmpeg** (optional): For MP3/non-WAV support. WAV-only needs `soundfile` only.
+
+---
+
+## Quick Start
 
 ```powershell
-pip install librosa soundfile numpy pandas scikit-learn imbalanced-learn xgboost joblib matplotlib seaborn pyaudio
+# 1. Prepare data
+#    Add .wav files to dataset/wake/ and dataset/nonwake/
+
+# 2. Build dataset and train
+python run_wakeword.py dataset
+python run_wakeword.py train
+
+# 3. Run live detection
+python run_wakeword.py realtime
 ```
+
+---
+
+## Usage
+
+### CLI Commands
+
+| Command | Description |
+|---------|-------------|
+| `dataset` | Build dataset.csv from audio folders |
+| `train` | Train model, save artifacts, run evaluation |
+| `evaluate` | Generate ROC/PR report (standalone) |
+| `realtime` | Live microphone detection |
+| `file-test` | Test .wav files in test_samples/ |
+| `collect` | Copy hard_negatives.txt entries to hard_negatives/ |
+
+```powershell
+python run_wakeword.py <command>
+# or after pip install -e .:
+wakeword <command>
+```
+
+### Configuration
+
+Edit `config.yaml` to adjust:
+
+- **paths** – dataset, model, evaluation output
+- **audio** – sample_rate, max_len, n_mfcc, n_mels
+- **dataset** – augmentation list, hard_neg count
+- **train** – RFE features, threshold search, min recall
+- **realtime** – VAD, cooldown, sequential windows
+
+### Evaluation Report
+
+After training (or via `wakeword evaluate`), output appears in `evaluation_report/`:
+
+- `report.md` – Metrics summary
+- `report.json` – Machine-readable metrics
+- `roc_pr_curves.png` – ROC and PR curves
+- `confusion_matrix_eval.png` – Confusion matrix
+
+---
+
+## Model Comparison
+
+| Baseline | Typical performance | Notes |
+|----------|---------------------|------|
+| **Current (Stacking)** | ~79% wake recall, ~86% accuracy | SVC+RF+XGB, RFE, threshold tuning |
+| **Single SVC** | Lower recall | Simpler, faster |
+| **Single RF** | Similar | No probability calibration |
+| **XGBoost only** | Comparable | Single model, faster train |
+
+For production, consider:
+
+- **Smaller feature set** – Fewer RFE features for lower latency
+- **Quantization** – Export to ONNX/OpenVino for edge
+- **Deep model** – Small CNN/RNN for higher accuracy (larger footprint)
+
+---
+
+## Testing
+
+```powershell
+pytest tests/ -v
+```
+
+Tests cover: feature extraction, inference path, threshold/cooldown logic, VAD.
 
 ---
 
@@ -61,91 +166,29 @@ pip install librosa soundfile numpy pandas scikit-learn imbalanced-learn xgboost
 
 ```
 wake_world_project/
-├── dataset/
-│   ├── wake/          # Wake word .wav files
-│   └── nonwake/       # Non-wake background .wav files
-├── hard_negatives/    # FP files for hard negative augmentation
-├── create_dataset.py  # Build dataset.csv from audio
-├── train_model.py     # Train ensemble, save model artifacts
-├── collect_hard_negatives.py   # Copy FP files to hard_negatives/
-├── inference.py       # Model loading, StreamingWakeDetector
-├── live_test.py       # Real-time mic detection
-├── realtime_detection.py      # Alias for live_test.py
-├── model.pkl          # Trained model (after training)
-├── scaler.pkl         # Feature scaler
-├── inference_config.pkl       # Threshold, feature config
-├── dataset.csv        # Feature dataset
-├── dataset_manifest.csv       # Path manifest
-└── requirements.txt
+├── config.yaml
+├── src/wakeword/
+│   ├── config.py, features.py, dataset.py
+│   ├── train.py, inference.py, evaluate.py
+│   ├── vad.py, realtime.py, file_test.py, collect.py
+│   └── cli.py
+├── tests/
+├── run_wakeword.py
+├── create_dataset.py, train_model.py, ...  # legacy wrappers
+├── evaluation_report/
+├── dataset/, hard_negatives/, test_samples/
+└── model.pkl, scaler.pkl, inference_config.pkl
 ```
 
 ---
 
-## Usage
+## Future Work
 
-### 1. Prepare data
-
-Place `.wav` files in:
-- `dataset/wake/` – recordings of the wake word
-- `dataset/nonwake/` – background speech / other phrases
-
-### 2. Build dataset
-
-```powershell
-python create_dataset.py
-```
-
-Creates `dataset.csv` and `dataset_manifest.csv`. Wake samples are augmented; hard negatives from `hard_negatives/` are added with 15 variants each.
-
-### 3. Train model
-
-```powershell
-python train_model.py
-```
-
-Outputs:
-- `model.pkl` – trained ensemble
-- `scaler.pkl` – StandardScaler
-- `inference_config.pkl` – threshold and feature config
-- `confusion_matrix.png` – evaluation
-- `hard_negatives.txt` – FP file paths for the next cycle
-
-### 4. Reduce false positives (optional)
-
-```powershell
-python collect_hard_negatives.py
-python create_dataset.py
-python train_model.py
-```
-
-### 5. Live detection
-
-```powershell
-python live_test.py
-```
-
-or:
-
-```powershell
-python realtime_detection.py
-```
-
-- Uses the default microphone
-- 16 kHz, 1 s window, 0.25 s hop
-- Requires 2 consecutive windows above threshold to trigger
-- Press **Ctrl+C** to stop
-
----
-
-## Quick Start
-
-```powershell
-cd wake_world_project
-pip install -r requirements.txt
-python create_dataset.py
-python train_model.py
-python live_test.py
-```
+- [ ] End-to-end deep model (e.g., small CNN on mel spectrogram)
+- [ ] Multi-wake-word support
+- [ ] Export to ONNX / TensorFlow Lite for mobile
+- [ ] Speaker adaptation / personalization
+- [ ] Quantized inference for MCU deployment
 
 ---
 

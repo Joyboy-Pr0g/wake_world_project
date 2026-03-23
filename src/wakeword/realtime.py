@@ -1,0 +1,92 @@
+"""Real-time microphone detection."""
+import sys
+import numpy as np
+
+try:
+    import pyaudio
+except ImportError:
+    print("Install pyaudio: pip install pyaudio")
+    print("On Windows, if that fails: pip install pipwin && pipwin install pyaudio")
+    sys.exit(1)
+
+from .config import load_config
+from .features import extract_features, FEATURE_COLUMNS
+from .inference import load_artifacts, StreamingWakeDetector
+
+
+def features_to_dict(features_list, config):
+    """Convert feature list to dict, filtered by config columns."""
+    d = dict(zip(FEATURE_COLUMNS, features_list))
+    all_cols = config.get("all_feature_cols")
+    if all_cols:
+        return {k: d[k] for k in all_cols if k in d}
+    drop = set(config.get("drop_cols", []))
+    return {k: d[k] for k in FEATURE_COLUMNS if k not in drop and k in d}
+
+
+def run_realtime(threshold_override=None):
+    """Run real-time microphone wake word detection.
+    threshold_override: if set, use this instead of config (e.g. 0.75 to reduce FPs)."""
+    cfg = load_config()
+    rt_cfg = cfg.get("realtime", {})
+    sr = rt_cfg.get("sample_rate", 16000)
+    hop = rt_cfg.get("hop_samples", 4000)
+    buffer_size = rt_cfg.get("buffer_samples", 16000)
+    cooldown_sec = rt_cfg.get("cooldown_seconds", 2.0)
+    hop_sec = hop / sr
+    cooldown_windows = max(0, int(cooldown_sec / hop_sec))
+    vad_enabled = rt_cfg.get("vad_enabled", False)
+    vad_rms = rt_cfg.get("vad_rms_threshold", 0.01)
+
+    print("Loading model...")
+    model, scaler, config = load_artifacts()
+    if threshold_override is not None:
+        config = dict(config)
+        config["sequential_threshold"] = threshold_override
+    detector = StreamingWakeDetector(
+        model, scaler, config,
+        vad_enabled=vad_enabled,
+        vad_rms_threshold=vad_rms,
+        cooldown_windows=cooldown_windows,
+    )
+
+    p = pyaudio.PyAudio()
+    stream = p.open(
+        format=pyaudio.paInt16,
+        channels=1,
+        rate=sr,
+        input=True,
+        frames_per_buffer=hop,
+    )
+
+    buffer = np.zeros(buffer_size, dtype=np.float32)
+    print("Listening... (Ctrl+C to stop)")
+    print("Say your wake word twice in a row to trigger.\n")
+
+    try:
+        while True:
+            raw = stream.read(hop, exception_on_overflow=False)
+            chunk = np.frombuffer(raw, dtype=np.int16).astype(np.float32) / 32768.0
+
+            buffer[:-hop] = buffer[hop:]
+            buffer[-hop:] = chunk
+
+            audio_cfg = cfg.get("audio", {})
+            max_len = audio_cfg.get("max_len_samples", 16000)
+            norm_rms = audio_cfg.get("normalize_rms", True)
+            target_rms = audio_cfg.get("target_rms", 0.05)
+            features_list = extract_features(buffer.copy(), sr, max_len=max_len, normalize=norm_rms, target_rms=target_rms)
+            features_dict = features_to_dict(features_list, config)
+
+            triggered, prob = detector.process_window(features_dict)
+            if triggered:
+                print("\033[92m" + "=" * 40)
+                print("*** WAKE WORD DETECTED ***")
+                print("=" * 40 + "\033[0m")
+                print(f"  (P(wake)={prob:.2f})\n")
+    except KeyboardInterrupt:
+        print("\nStopped.")
+    finally:
+        stream.stop_stream()
+        stream.close()
+        p.terminate()

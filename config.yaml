@@ -1,0 +1,82 @@
+# Wake Word Detection - Configuration
+# Paths and directories
+paths:
+  dataset: "dataset"
+  hard_negatives: "hard_negatives"
+  hard_negatives_txt: "hard_negatives.txt"
+  dataset_csv: "dataset.csv"
+  dataset_manifest: "dataset_manifest.csv"
+  model: "model.pkl"
+  scaler: "scaler.pkl"
+  inference_config: "inference_config.pkl"
+  confusion_matrix: "confusion_matrix.png"
+  test_samples: "test_samples"
+
+# Audio & feature extraction
+audio:
+  sample_rate: 16000
+  max_len_samples: 16000  # 1 second at 16 kHz
+  n_mfcc: 13
+  n_mels: 40
+  n_bands_contrast: 6
+  # RMS normalization for low-volume robustness (scale quiet audio up)
+  normalize_rms: true
+  target_rms: 0.05
+  # Note: Retrain (dataset + train) after changing these to keep train/inference consistent
+
+# Labels
+labels:
+  - wake
+  - nonwake
+
+# Dataset augmentation
+dataset:
+  wake_augmentations:  # 10 variants per wake file
+    - { type: original }
+    - { type: pitch_shift, n_steps: 2 }
+    - { type: pitch_shift, n_steps: -2 }
+    - { type: pitch_shift, n_steps: 1 }
+    - { type: pitch_shift, n_steps: -1 }
+    - { type: time_stretch, rate: 1.1 }
+    - { type: time_stretch, rate: 0.9 }
+    - { type: time_stretch, rate: 1.05 }
+    - { type: noise }
+    - { type: reverb }
+  hard_neg_aug_count: 15
+  reverb_room_scale: 0.25
+  noise_scale: 0.005
+
+# Training
+train:
+  random_state: 42
+  test_size: 0.2
+  val_size: 0.15
+  n_features_rfe: 65
+  drop_cols:
+    - mfcc_0
+    - mfcc_std_0
+    - delta_0
+    - delta2_0
+    - delta2_std_0
+  min_wake_recall: 0.75
+  threshold_search_min: 0.15
+  threshold_search_max: 0.71
+  threshold_search_step: 0.01
+
+# Real-time detection
+realtime:
+  sample_rate: 16000
+  chunk_samples: 16000
+  hop_samples: 4000
+  buffer_samples: 16000
+  sequential_windows: 2
+  vad_enabled: true
+  vad_rms_threshold: 0.01
+  vad_zcr_threshold: 0.02
+  cooldown_seconds: 2.0
+
+# File-based test
+file_test:
+  sample_rate: 16000
+  window_samples: 16000
+  hop_samples: 4000
