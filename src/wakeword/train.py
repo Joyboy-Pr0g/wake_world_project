@@ -268,6 +268,7 @@ def train_model():
         "contrast_p75": contrast_p75,
         "sequential_windows": n_seq,
         "sequential_threshold": optimal_threshold,
+        "high_confidence_trigger": 0.95,
     }, root / paths["inference_config"])
 
     fp_mask = (y_test.values == "nonwake") & (np.array(y_pred) == "wake")
@@ -290,7 +291,7 @@ def train_model():
     try:
         from .evaluate import run_evaluation
         all_cols = X_train.columns.tolist()
-        X_test_full = X_test[all_cols].values
+        X_test_full = X_test[all_cols]
         X_test_scaled_full = scaler.transform(X_test_full)
         run_evaluation(
             X_test_scaled_full,

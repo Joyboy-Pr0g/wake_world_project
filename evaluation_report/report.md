@@ -1,6 +1,6 @@
 # Wake Word Evaluation Report
 
-**Generated:** 2026-03-24 06:35  
+**Generated:** 2026-03-24 07:23  
 **Threshold:** 0.500
 
 ## Metrics
@@ -14,8 +14,8 @@
 | Nonwake Precision | 0.9274 |
 | Nonwake Recall | 0.9468 |
 | Macro F1 | 0.8824 |
-| AUC-ROC | 0.9517 |
-| AUC-PR (AP) | 0.8374 |
+| AUC-ROC | 0.9516 |
+| AUC-PR (AP) | 0.8366 |
 
 ## False Positives
 

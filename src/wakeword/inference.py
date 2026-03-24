@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 import joblib
 
 from .config import load_config, get_project_root
@@ -84,6 +85,7 @@ class StreamingWakeDetector:
             else config.get("sequential_windows", rt_cfg.get("sequential_windows", 2))
         )
         self.seq_threshold = config.get("sequential_threshold", 0.5)
+        self.high_confidence_trigger = config.get("high_confidence_trigger", 0.95)
         self._consecutive_high = 0
         self.vad_enabled = vad_enabled if vad_enabled is not None else rt_cfg.get("vad_enabled", False)
         self.vad_rms_threshold = vad_rms_threshold or rt_cfg.get("vad_rms_threshold", 0.01)
@@ -104,15 +106,21 @@ class StreamingWakeDetector:
         all_cols = self.config.get("all_feature_cols") or self.config.get("feature_cols", [])
         selected_mask = self.config.get("selected_mask")
         if hasattr(features_1d, "keys"):
-            X_full = np.array([[features_1d[fc] for fc in all_cols]], dtype=np.float64).reshape(1, -1)
+            X_df = pd.DataFrame([[features_1d[fc] for fc in all_cols]], columns=all_cols)
         else:
-            X_full = np.asarray(features_1d, dtype=np.float64).reshape(1, -1)
-        X_scaled_full = self.scaler.transform(X_full)
+            arr = np.asarray(features_1d, dtype=np.float64).reshape(1, -1)
+            X_df = pd.DataFrame(arr, columns=all_cols)
+        X_scaled_full = self.scaler.transform(X_df)
         if selected_mask is not None:
             X = X_scaled_full[:, selected_mask]
         else:
             X = X_scaled_full
         proba = float(self.model.predict_proba(X)[0, self.wake_idx])
+
+        if proba >= self.high_confidence_trigger:
+            self._consecutive_high = 0
+            self._windows_in_cooldown = self.cooldown_windows
+            return True, proba
 
         if proba > self.seq_threshold:
             self._consecutive_high += 1

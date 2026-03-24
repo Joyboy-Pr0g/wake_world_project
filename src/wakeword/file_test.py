@@ -33,8 +33,7 @@ def process_file(path, model, scaler, config, sr, window_size, hop_size, normali
         window = audio[start : start + window_size]
         features_list = extract_features(window, sr, max_len=window_size, normalize=normalize, target_rms=target_rms)
         X_full = features_to_df(features_list, config)
-        X_arr = np.asarray(X_full.values, dtype=np.float64).reshape(1, -1)
-        X_scaled = scaler.transform(X_arr)
+        X_scaled = scaler.transform(X_full)
         selected_mask = config.get("selected_mask")
         if selected_mask is not None:
             X_sel = np.asarray(X_scaled[:, selected_mask])
@@ -46,8 +45,7 @@ def process_file(path, model, scaler, config, sr, window_size, hop_size, normali
         window = audio[:window_size]
         features_list = extract_features(window, sr, max_len=window_size, normalize=normalize, target_rms=target_rms)
         X_full = features_to_df(features_list, config)
-        X_arr = np.asarray(X_full.values, dtype=np.float64).reshape(1, -1)
-        X_scaled = scaler.transform(X_arr)
+        X_scaled = scaler.transform(X_full)
         selected_mask = config.get("selected_mask")
         if selected_mask is not None:
             X_sel = np.asarray(X_scaled[:, selected_mask])
@@ -64,7 +62,11 @@ def _is_nonwake_filename(fname):
     return "nowake" in lower or "nonwake" in lower
 
 
-def _has_consecutive_high(probs, threshold, n_consecutive):
+def _has_consecutive_high(probs, threshold, n_consecutive, high_confidence_trigger=0.95):
+    if not probs:
+        return False
+    if max(probs) >= high_confidence_trigger:
+        return True
     run = 0
     for p in probs:
         if p > threshold:
@@ -87,11 +89,11 @@ def test_single_file(path, threshold_override=None, smoothing_windows=2):
     from .config import get_project_root
     cfg = load_config()
     root = get_project_root()
-    ft_cfg = cfg.get("file_test", {})
-    sr = ft_cfg.get("sample_rate", 16000)
-    window_size = ft_cfg.get("window_samples", 16000)
-    hop_size = ft_cfg.get("hop_samples", 4000)
     audio_cfg = cfg.get("audio", {})
+    ft_cfg = cfg.get("file_test", {})
+    sr = audio_cfg.get("sample_rate", ft_cfg.get("sample_rate", 16000))
+    window_size = audio_cfg.get("max_len_samples", ft_cfg.get("window_samples", 16000))
+    hop_size = ft_cfg.get("hop_samples", 4000)
     normalize = audio_cfg.get("normalize_rms", True)
     target_rms = audio_cfg.get("target_rms", 0.05)
 
@@ -102,9 +104,10 @@ def test_single_file(path, threshold_override=None, smoothing_windows=2):
     try:
         model, scaler, config = load_artifacts()
         threshold = threshold_override if threshold_override is not None else config.get("threshold", 0.70)
+        high_conf = config.get("high_confidence_trigger", 0.95)
         probs = process_file(path, model, scaler, config, sr, window_size, hop_size, normalize, target_rms)
         max_prob = max(probs)
-        triggered = _has_consecutive_high(probs, threshold, smoothing_windows)
+        triggered = _has_consecutive_high(probs, threshold, smoothing_windows, high_confidence_trigger=high_conf)
         return {
             "triggered": triggered,
             "max_prob": max_prob,
@@ -123,13 +126,13 @@ def run_file_test(threshold_override=None, smoothing_windows=2):
     from .config import get_project_root
     cfg = load_config()
     root = get_project_root()
-    ft_cfg = cfg.get("file_test", {})
     paths = cfg["paths"]
-    sr = ft_cfg.get("sample_rate", 16000)
-    window_size = ft_cfg.get("window_samples", 16000)
+    audio_cfg = cfg.get("audio", {})
+    ft_cfg = cfg.get("file_test", {})
+    sr = audio_cfg.get("sample_rate", ft_cfg.get("sample_rate", 16000))
+    window_size = audio_cfg.get("max_len_samples", ft_cfg.get("window_samples", 16000))
     hop_size = ft_cfg.get("hop_samples", 4000)
     test_dir = root / paths.get("test_samples", "test_samples")
-    audio_cfg = cfg.get("audio", {})
     normalize = audio_cfg.get("normalize_rms", True)
     target_rms = audio_cfg.get("target_rms", 0.05)
 
@@ -140,6 +143,7 @@ def run_file_test(threshold_override=None, smoothing_windows=2):
     print("Loading model, scaler, inference_config...")
     model, scaler, config = load_artifacts()
     threshold = threshold_override if threshold_override is not None else config.get("threshold", 0.70)
+    high_conf = config.get("high_confidence_trigger", 0.95)
     feature_cols = config.get("feature_cols", [])
     print(f"Using threshold: {threshold:.3f}" + (" (override)" if threshold_override is not None else ""))
     print(f"Temporal smoothing: {smoothing_windows} consecutive windows required")
@@ -159,7 +163,7 @@ def run_file_test(threshold_override=None, smoothing_windows=2):
             safe_print(f"[TEST] File: {fname} | Confidence: N/A | Status: ERROR - {e}")
             continue
         max_prob = max(probs)
-        triggered = _has_consecutive_high(probs, threshold, smoothing_windows)
+        triggered = _has_consecutive_high(probs, threshold, smoothing_windows, high_confidence_trigger=high_conf)
         status = "TRIGGERED" if triggered else "nonwake"
         safe_print(f"[TEST] File: {fname} | Confidence: {max_prob:.2%} | Status: {status}")
     print("-" * 50)
@@ -177,13 +181,13 @@ def run_file_test_with_scorecard(threshold_override=None, smoothing_windows=2):
     from .config import get_project_root
     cfg = load_config()
     root = get_project_root()
-    ft_cfg = cfg.get("file_test", {})
     paths = cfg["paths"]
-    sr = ft_cfg.get("sample_rate", 16000)
-    window_size = ft_cfg.get("window_samples", 16000)
+    audio_cfg = cfg.get("audio", {})
+    ft_cfg = cfg.get("file_test", {})
+    sr = audio_cfg.get("sample_rate", ft_cfg.get("sample_rate", 16000))
+    window_size = audio_cfg.get("max_len_samples", ft_cfg.get("window_samples", 16000))
     hop_size = ft_cfg.get("hop_samples", 4000)
     test_dir = root / paths.get("test_samples", "test_samples")
-    audio_cfg = cfg.get("audio", {})
     normalize = audio_cfg.get("normalize_rms", True)
     target_rms = audio_cfg.get("target_rms", 0.05)
 
@@ -192,6 +196,7 @@ def run_file_test_with_scorecard(threshold_override=None, smoothing_windows=2):
 
     model, scaler, config = load_artifacts()
     threshold = threshold_override if threshold_override is not None else config.get("threshold", 0.70)
+    high_conf = config.get("high_confidence_trigger", 0.95)
 
     files = sorted([f for f in os.listdir(test_dir) if f.lower().endswith(".wav")])
     if not files:
@@ -204,7 +209,7 @@ def run_file_test_with_scorecard(threshold_override=None, smoothing_windows=2):
         try:
             probs = process_file(path, model, scaler, config, sr, window_size, hop_size, normalize, target_rms)
             max_prob = max(probs)
-            triggered = _has_consecutive_high(probs, threshold, smoothing_windows)
+            triggered = _has_consecutive_high(probs, threshold, smoothing_windows, high_confidence_trigger=high_conf)
             prediction = "wake" if triggered else "nonwake"
             correct = prediction == ground_truth
         except Exception as e:

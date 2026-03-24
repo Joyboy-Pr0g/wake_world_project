@@ -27,10 +27,11 @@ def run_realtime(threshold_override=None, smoothing_windows=None):
     warnings.filterwarnings("ignore", category=UserWarning, module="sklearn")
 
     cfg = load_config()
+    audio_cfg = cfg.get("audio", {})
     rt_cfg = cfg.get("realtime", {})
-    sr = rt_cfg.get("sample_rate", 16000)
+    sr = audio_cfg.get("sample_rate", rt_cfg.get("sample_rate", 16000))
     hop = rt_cfg.get("hop_samples", 4000)
-    buffer_size = rt_cfg.get("buffer_samples", 16000)
+    buffer_size = audio_cfg.get("max_len_samples", rt_cfg.get("buffer_samples", 16000))
     cooldown_sec = rt_cfg.get("cooldown_seconds", 2.0)
     hop_sec = hop / sr
     cooldown_windows = max(0, int(cooldown_sec / hop_sec))
@@ -63,7 +64,8 @@ def run_realtime(threshold_override=None, smoothing_windows=None):
 
     buffer = np.zeros(buffer_size, dtype=np.float32)
     print("Ready. Start talking!")
-    print(f"(Requires {n_consecutive} consecutive windows above threshold to trigger. Ctrl+C to stop)\n")
+    hct = config.get("high_confidence_trigger", 0.95)
+    print(f"(Trigger: {n_consecutive} consecutive windows above threshold, or immediate if >{hct:.0%}. Ctrl+C to stop)\n")
 
     try:
         while True:
