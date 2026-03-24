@@ -41,6 +41,14 @@ def main():
             smoothing_windows=getattr(args, "smoothing", 2),
         )
 
+    def cmd_ui(args):
+        root = get_project_root()
+        simple_ui = root / "simple_ui.py"
+        if not simple_ui.exists():
+            raise FileNotFoundError(f"{simple_ui} not found")
+        import subprocess
+        subprocess.run([sys.executable, str(simple_ui)], cwd=str(root))
+
     def cmd_collect(args):
         load_config(args.config)
         collect_hard_negatives()
@@ -67,6 +75,7 @@ Commands:
   evaluate      Generate ROC/PR curves, metrics report (requires trained model)
   realtime      Live microphone detection
   file-test     Test .wav files in test_samples/
+  ui            Simple Tkinter GUI (realtime + file-test)
   collect       Copy hard_negatives.txt entries to hard_negatives/
   mine          Copy nonwake files with Wake Confidence > 50% to hard_negatives/
         """,
@@ -84,6 +93,7 @@ Commands:
     p_ft.add_argument("-t", "--threshold", type=float, default=None, help="Threshold (recommended: 0.70)")
     p_ft.add_argument("-s", "--smoothing", type=int, default=2, help="Consecutive windows required (default: 2)")
     p_ft.set_defaults(func=cmd_file_test)
+    subparsers.add_parser("ui", help="Simple GUI for realtime + file-test").set_defaults(func=cmd_ui)
     subparsers.add_parser("collect", help="Copy hard_negatives.txt to hard_negatives/").set_defaults(func=cmd_collect)
     subparsers.add_parser("evaluate", help="Generate evaluation report").set_defaults(func=cmd_evaluate)
     p_mine = subparsers.add_parser("mine", help="Copy nonwake FPs from test_samples to hard_negatives/")

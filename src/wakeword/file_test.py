@@ -1,5 +1,7 @@
 import os
 import sys
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
 import librosa
@@ -54,6 +56,12 @@ def process_file(path, model, scaler, config, sr, window_size, hop_size, normali
     return all_probs
 
 
+def _is_nonwake_filename(fname):
+    """Infer ground truth from filename: nowake/nonwake = nonwake, else wake."""
+    lower = fname.lower()
+    return "nowake" in lower or "nonwake" in lower
+
+
 def _has_consecutive_high(probs, threshold, n_consecutive):
     run = 0
     for p in probs:
@@ -64,6 +72,43 @@ def _has_consecutive_high(probs, threshold, n_consecutive):
         else:
             run = 0
     return False
+
+
+def test_single_file(path, threshold_override=None, smoothing_windows=2):
+    """
+    Test a single WAV file. Returns dict with triggered, max_prob, confidence_pct, error.
+    For use by UI or APIs.
+    """
+    from .config import get_project_root
+    cfg = load_config()
+    root = get_project_root()
+    ft_cfg = cfg.get("file_test", {})
+    sr = ft_cfg.get("sample_rate", 16000)
+    window_size = ft_cfg.get("window_samples", 16000)
+    hop_size = ft_cfg.get("hop_samples", 4000)
+    audio_cfg = cfg.get("audio", {})
+    normalize = audio_cfg.get("normalize_rms", True)
+    target_rms = audio_cfg.get("target_rms", 0.05)
+
+    path = Path(path) if not isinstance(path, Path) else path
+    if not path.exists():
+        return {"triggered": False, "error": f"File not found: {path}"}
+
+    try:
+        model, scaler, config = load_artifacts()
+        threshold = threshold_override if threshold_override is not None else config.get("threshold", 0.70)
+        probs = process_file(path, model, scaler, config, sr, window_size, hop_size, normalize, target_rms)
+        max_prob = max(probs)
+        triggered = _has_consecutive_high(probs, threshold, smoothing_windows)
+        return {
+            "triggered": triggered,
+            "max_prob": max_prob,
+            "confidence_pct": max_prob * 100,
+            "prediction": "wake" if triggered else "nonwake",
+            "error": None,
+        }
+    except Exception as e:
+        return {"triggered": False, "error": str(e)}
 
 
 def run_file_test(threshold_override=None, smoothing_windows=2):
@@ -122,3 +167,56 @@ def run_file_test(threshold_override=None, smoothing_windows=2):
         print()
     print("-" * 50)
     print("Done.")
+
+
+def run_file_test_with_scorecard(threshold_override=None, smoothing_windows=2):
+    """
+    Run file-test on test_samples/, print per-file results (like run_file_test),
+    then return structured data for a scorecard: totals, successes, failures, wrong files.
+    """
+    from .config import get_project_root
+    cfg = load_config()
+    root = get_project_root()
+    ft_cfg = cfg.get("file_test", {})
+    paths = cfg["paths"]
+    sr = ft_cfg.get("sample_rate", 16000)
+    window_size = ft_cfg.get("window_samples", 16000)
+    hop_size = ft_cfg.get("hop_samples", 4000)
+    test_dir = root / paths.get("test_samples", "test_samples")
+    audio_cfg = cfg.get("audio", {})
+    normalize = audio_cfg.get("normalize_rms", True)
+    target_rms = audio_cfg.get("target_rms", 0.05)
+
+    if not test_dir.is_dir():
+        return None
+
+    model, scaler, config = load_artifacts()
+    threshold = threshold_override if threshold_override is not None else config.get("threshold", 0.70)
+
+    files = sorted([f for f in os.listdir(test_dir) if f.lower().endswith(".wav")])
+    if not files:
+        return None
+
+    results = []
+    for fname in files:
+        path = test_dir / fname
+        ground_truth = "nonwake" if _is_nonwake_filename(fname) else "wake"
+        try:
+            probs = process_file(path, model, scaler, config, sr, window_size, hop_size, normalize, target_rms)
+            max_prob = max(probs)
+            triggered = _has_consecutive_high(probs, threshold, smoothing_windows)
+            prediction = "wake" if triggered else "nonwake"
+            correct = prediction == ground_truth
+        except Exception as e:
+            max_prob = 0.0
+            prediction = "error"
+            correct = False
+        results.append({
+            "fname": fname,
+            "ground_truth": ground_truth,
+            "prediction": prediction,
+            "confidence_pct": max_prob * 100,
+            "correct": correct,
+        })
+
+    return results

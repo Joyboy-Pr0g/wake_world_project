@@ -106,6 +106,7 @@ python run_wakeword.py realtime
 | `evaluate` | Generate ROC/PR report (standalone) |
 | `realtime` | Live microphone detection |
 | `file-test` | Test .wav files in test_samples/ |
+| `ui` | Simple Tkinter GUI (realtime + file-test) |
 | `collect` | Copy hard_negatives.txt entries to hard_negatives/ |
 
 ```powershell
@@ -120,6 +121,7 @@ wakeword <command>
 |------|---------|
 | Live mic detection | `python run_wakeword.py realtime -t 0.70 -s 2` |
 | Test .wav files | `python run_wakeword.py file-test -t 0.70 -s 2` |
+| Simple GUI | `python run_wakeword.py ui` or `python simple_ui.py` |
 | Rebuild dataset | `python run_wakeword.py dataset` |
 | Train model | `python run_wakeword.py train` |
 | Evaluation report | `python run_wakeword.py evaluate` |
