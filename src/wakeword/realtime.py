@@ -94,3 +94,90 @@ def run_realtime(threshold_override=None, smoothing_windows=None, vad_disabled=F
         stream.stop_stream()
         stream.close()
         p.terminate()
+
+
+def record_from_mic_until_stop(stop_event):
+    """
+    Record from default input until stop_event is set (check between chunk reads).
+    Returns mono float32 audio in [-1, 1], same sample rate as config.
+    """
+    cfg = load_config()
+    audio_cfg = cfg.get("audio", {})
+    rt_cfg = cfg.get("realtime", {})
+    sr = audio_cfg.get("sample_rate", rt_cfg.get("sample_rate", 16000))
+    hop = rt_cfg.get("hop_samples", 4000)
+    p = pyaudio.PyAudio()
+    stream = p.open(
+        format=pyaudio.paInt16,
+        channels=1,
+        rate=sr,
+        input=True,
+        frames_per_buffer=hop,
+    )
+    frames = []
+    try:
+        while not stop_event.is_set():
+            raw = stream.read(hop, exception_on_overflow=False)
+            frames.append(np.frombuffer(raw, dtype=np.int16))
+    finally:
+        stream.stop_stream()
+        stream.close()
+        p.terminate()
+    if not frames:
+        return np.array([], dtype=np.float32)
+    return np.concatenate(frames).astype(np.float32) / 32768.0
+
+
+def analyze_recorded_audio(audio, threshold_override=None, smoothing_windows=None):
+    """
+    Run wake-word detection on recorded buffer (same pipeline as file-test).
+    Returns dict: triggered, max_prob, confidence_pct, prediction, lines (list of str for printing).
+    """
+    import warnings
+    warnings.filterwarnings("ignore", category=UserWarning, module="sklearn")
+
+    from .file_test import process_audio, _has_consecutive_high
+
+    cfg = load_config()
+    audio_cfg = cfg.get("audio", {})
+    ft_cfg = cfg.get("file_test", {})
+    rt_cfg = cfg.get("realtime", {})
+    sr = audio_cfg.get("sample_rate", rt_cfg.get("sample_rate", 16000))
+    hop = rt_cfg.get("hop_samples", 4000)
+    window_size = audio_cfg.get("max_len_samples", ft_cfg.get("window_samples", 16000))
+    norm_rms = audio_cfg.get("normalize_rms", True)
+    target_rms = audio_cfg.get("target_rms", 0.05)
+
+    lines = []
+    if len(audio) < window_size:
+        lines.append(f"Warning: recording very short ({len(audio)} samples). Need at least {window_size} for one window.")
+
+    model, scaler, inf_config = load_artifacts()
+    threshold = threshold_override if threshold_override is not None else inf_config.get("threshold", 0.70)
+    high_conf = inf_config.get("high_confidence_trigger", 0.95)
+    n_consecutive = smoothing_windows if smoothing_windows is not None else rt_cfg.get("sequential_windows", 2)
+
+    probs = process_audio(
+        audio, model, scaler, inf_config, sr, window_size, hop,
+        normalize=norm_rms, target_rms=target_rms,
+    )
+    triggered = _has_consecutive_high(probs, threshold, n_consecutive, high_confidence_trigger=high_conf)
+    max_prob = max(probs) if probs else 0.0
+
+    lines.append("")
+    lines.append("=" * 50)
+    if triggered:
+        lines.append("*** WAKE WORD DETECTED ***")
+    else:
+        lines.append("No wake word detected.")
+    lines.append(f"  Max confidence: {max_prob:.1%}")
+    lines.append(f"  Threshold: {threshold:.2f} (smoothing: {n_consecutive} windows)")
+    lines.append("=" * 50)
+
+    return {
+        "triggered": triggered,
+        "max_prob": max_prob,
+        "confidence_pct": max_prob * 100,
+        "prediction": "wake" if triggered else "nonwake",
+        "lines": lines,
+    }

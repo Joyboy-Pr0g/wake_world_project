@@ -83,6 +83,8 @@ class WakeWordUI:
         self.realtime_proc = None
         self.realtime_stop = threading.Event()
         self.realtime_process_holder = {"proc": None}
+        self._record_stop_event = threading.Event()
+        self._record_thread = None
 
         self._build_ui()
 
@@ -118,9 +120,23 @@ class WakeWordUI:
         self.rt_stop_btn = ttk.Button(rt_ctrl, text="Stop", command=self._stop_realtime, state=tk.DISABLED)
         self.rt_stop_btn.pack(side=tk.LEFT)
 
+        rt_record = ttk.Frame(rt_frame)
+        rt_record.pack(fill=tk.X, pady=(4, 0))
+        ttk.Label(rt_record, text="Record & test (like a sample):").pack(side=tk.LEFT, padx=(0, 8))
+        self.record_start_btn = ttk.Button(rt_record, text="Start Recording", command=self._start_mic_record)
+        self.record_start_btn.pack(side=tk.LEFT, padx=2)
+        self.record_stop_btn = ttk.Button(
+            rt_record, text="Stop Recording", command=self._stop_mic_record, state=tk.DISABLED
+        )
+        self.record_stop_btn.pack(side=tk.LEFT, padx=2)
+
         self.rt_output = scrolledtext.ScrolledText(rt_frame, height=14, state=tk.NORMAL, wrap=tk.WORD)
         self.rt_output.pack(fill=tk.BOTH, expand=True)
-        self.rt_output.insert(tk.END, "Click 'Start Listening' to begin. Output appears here.\n")
+        self.rt_output.insert(
+            tk.END,
+            "Live: 'Start Listening' for continuous detection.\n"
+            "Record: 'Start Recording' → speak → 'Stop Recording' → result appears below.\n\n",
+        )
 
         # ----- File Test tab -----
         ft_frame = ttk.Frame(notebook, padding=8)
@@ -197,6 +213,59 @@ class WakeWordUI:
         self.rt_stop_btn.config(state=tk.DISABLED)
         self.rt_output.insert(tk.END, "\nStopped.\n")
 
+    def _start_mic_record(self):
+        if self._record_thread is not None and self._record_thread.is_alive():
+            return
+        self.rt_output.insert(tk.END, "\nRecording… press 'Stop Recording' when finished.\n")
+        self.rt_output.see(tk.END)
+        self._record_stop_event.clear()
+        self.record_start_btn.config(state=tk.DISABLED)
+        self.record_stop_btn.config(state=tk.NORMAL)
+        self.rt_start_btn.config(state=tk.DISABLED)
+
+        def worker():
+            from wakeword.realtime import record_from_mic_until_stop, analyze_recorded_audio
+
+            audio_ref = [None]
+            err_msg = [None]
+
+            def finish():
+                self.record_start_btn.config(state=tk.NORMAL)
+                self.record_stop_btn.config(state=tk.DISABLED)
+                self.rt_start_btn.config(state=tk.NORMAL)
+                self._record_thread = None
+                if err_msg[0]:
+                    self.rt_output.insert(tk.END, f"Error: {err_msg[0]}\n")
+                    self.rt_output.see(tk.END)
+                    return
+                if audio_ref[0] is None or len(audio_ref[0]) == 0:
+                    self.rt_output.insert(tk.END, "No audio captured. Try again.\n")
+                    self.rt_output.see(tk.END)
+                    return
+                try:
+                    r = analyze_recorded_audio(
+                        audio_ref[0],
+                        threshold_override=self._get_threshold("realtime"),
+                        smoothing_windows=self._get_smoothing("realtime"),
+                    )
+                    for line in r["lines"]:
+                        self.rt_output.insert(tk.END, line + "\n")
+                except Exception as e:
+                    self.rt_output.insert(tk.END, f"Analysis error: {e}\n")
+                self.rt_output.see(tk.END)
+
+            try:
+                audio_ref[0] = record_from_mic_until_stop(self._record_stop_event)
+            except Exception as e:
+                err_msg[0] = str(e)
+            self.root.after(0, finish)
+
+        self._record_thread = threading.Thread(target=worker, daemon=True)
+        self._record_thread.start()
+
+    def _stop_mic_record(self):
+        self._record_stop_event.set()
+
     def _browse_file(self):
         path = filedialog.askopenfilename(
             title="Select WAV file",
@@ -241,6 +310,7 @@ class WakeWordUI:
 
     def _on_closing(self):
         self.realtime_stop.set()
+        self._record_stop_event.set()
         proc = self.realtime_process_holder.get("proc")
         if proc and proc.poll() is None:
             proc.terminate()
