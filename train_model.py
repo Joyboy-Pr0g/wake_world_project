@@ -1,4 +1,5 @@
 import sys
+import warnings
 from pathlib import Path
 
 root = Path(__file__).parent
@@ -14,7 +15,9 @@ __all__ = ["train_model", "XGBWrapper"]
 
 def main():
     load_config()
-    train_model()
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=UserWarning, module="sklearn")
+        train_model()
 
 
 if __name__ == "__main__":

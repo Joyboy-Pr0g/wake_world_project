@@ -1,0 +1,137 @@
+============================================================
+HARD NEGATIVES REPORT - False Positives (Non-wake scoring high)
+============================================================
+Threshold: 0.80
+Total files identified: 27
+
+--- Speakers triggering most False Positives (sorted by count) ---
+
+  Yusuf_Selim_Yilmaz: 2 file(s)
+  Hatice_nur_cakir: 2 file(s)
+  Berkan_Öksüz: 2 file(s)
+  Ensar_Celil_AVCI: 1 file(s)
+  Teoman_Agir: 1 file(s)
+  Hilal_kavas: 1 file(s)
+  hamza_kurtuldu: 1 file(s)
+  Samet_Eren_Tozlu: 1 file(s)
+  Yusuf_Semih_Ciftci: 1 file(s)
+  Sumeyye_Gursoy: 1 file(s)
+  Hasan_Arthur_Altuntaş: 1 file(s)
+  Akif_Seckin_Bayram: 1 file(s)
+  Fatih_Arslan: 1 file(s)
+  Osman_Abak: 1 file(s)
+  Baris_Aslan: 1 file(s)
+  Salih_Karakus: 1 file(s)
+  Abdulhakim_Sanli: 1 file(s)
+  Nilgun_Melek_Bilgin: 1 file(s)
+  Alpha_Cisse: 1 file(s)
+  Goksu_Kesen: 1 file(s)
+  yusuf_safa_kilic: 1 file(s)
+  Huseyin_Cakmak: 1 file(s)
+  Cigdem_Kurt: 1 file(s)
+  Irem_Nur_Sahin: 1 file(s)
+
+--- Detailed file list ---
+
+
+[Yusuf_Selim_Yilmaz] (2 files):
+  Yusuf_Selim_Yilmaz_nowake_2.wav  |  confidence: 94.18%
+    -> WARNING: source file not found
+  Yusuf_Selim_Yilmaz_nowake_1.wav  |  confidence: 94.18%
+    -> WARNING: source file not found
+
+[Hatice_nur_cakir] (2 files):
+  Hatice_nur_cakir_nowake_1.wav  |  confidence: 88.97%
+    -> WARNING: source file not found
+  Hatice_nur_cakir_nowake_2.wav  |  confidence: 88.97%
+    -> WARNING: source file not found
+
+[Berkan_Öksüz] (2 files):
+  Berkan_Öksüz_Nowake_2.wav  |  confidence: 88.67%
+    -> WARNING: source file not found
+  Berkan_Öksüz_Nowake_2.wav  |  confidence: 87.86%
+    -> moved to hard_negatives/
+
+[Ensar_Celil_AVCI] (1 files):
+  Ensar_Celil_AVCI_nowake_2.wav  |  confidence: 95.64%
+    -> WARNING: source file not found
+
+[Teoman_Agir] (1 files):
+  Teoman_Agir_nowake_2.wav  |  confidence: 95.64%
+    -> WARNING: source file not found
+
+[Hilal_kavas] (1 files):
+  Hilal_kavas_nowake_3.wav  |  confidence: 95.64%
+    -> WARNING: source file not found
+
+[hamza_kurtuldu] (1 files):
+  hamza_kurtuldu_nowake_1.wav  |  confidence: 95.64%
+    -> WARNING: source file not found
+
+[Samet_Eren_Tozlu] (1 files):
+  Samet_Eren_Tozlu_nowake2.wav  |  confidence: 95.29%
+    -> WARNING: source file not found
+
+[Yusuf_Semih_Ciftci] (1 files):
+  Yusuf_Semih_Ciftci_nowake2.wav  |  confidence: 94.18%
+    -> WARNING: source file not found
+
+[Sumeyye_Gursoy] (1 files):
+  Sumeyye_Gursoy_nowake_1.wav  |  confidence: 94.00%
+    -> WARNING: source file not found
+
+[Hasan_Arthur_Altuntaş] (1 files):
+  Hasan_Arthur_Altuntaş_no_wake1.wav  |  confidence: 94.00%
+    -> WARNING: source file not found
+
+[Akif_Seckin_Bayram] (1 files):
+  Akif_Seckin_Bayram_nowake_1.wav  |  confidence: 94.00%
+    -> WARNING: source file not found
+
+[Fatih_Arslan] (1 files):
+  Fatih_Arslan_nowake1.wav  |  confidence: 92.05%
+    -> WARNING: source file not found
+
+[Osman_Abak] (1 files):
+  Osman_Abak_nowake_2.wav  |  confidence: 92.00%
+    -> WARNING: source file not found
+
+[Baris_Aslan] (1 files):
+  Baris_Aslan_Nowake_1.wav  |  confidence: 88.67%
+    -> WARNING: source file not found
+
+[Salih_Karakus] (1 files):
+  Salih_Karakus_nonwake_2.wav  |  confidence: 87.86%
+    -> WARNING: source file not found
+
+[Abdulhakim_Sanli] (1 files):
+  Abdulhakim_Sanli_nowake1.wav  |  confidence: 87.86%
+    -> WARNING: source file not found
+
+[Nilgun_Melek_Bilgin] (1 files):
+  Nilgun_Melek_Bilgin_nowake_2.wav  |  confidence: 87.86%
+    -> WARNING: source file not found
+
+[Alpha_Cisse] (1 files):
+  Alpha_Cisse_nowake_1.wav  |  confidence: 87.50%
+    -> WARNING: source file not found
+
+[Goksu_Kesen] (1 files):
+  Goksu_Kesen_nonwake_2.wav  |  confidence: 85.82%
+    -> WARNING: source file not found
+
+[yusuf_safa_kilic] (1 files):
+  yusuf_safa_kilic_nowake_1.wav  |  confidence: 85.64%
+    -> WARNING: source file not found
+
+[Huseyin_Cakmak] (1 files):
+  Huseyin_Cakmak_nowake1.wav  |  confidence: 85.64%
+    -> WARNING: source file not found
+
+[Cigdem_Kurt] (1 files):
+  Cigdem_Kurt_nowake_2.wav  |  confidence: 84.76%
+    -> WARNING: source file not found
+
+[Irem_Nur_Sahin] (1 files):
+  Irem_Nur_Sahin_nowake_2.wav  |  confidence: 83.44%
+    -> WARNING: source file not found

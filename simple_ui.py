@@ -168,8 +168,11 @@ class WakeWordUI:
     def _start_realtime(self):
         self.realtime_stop.clear()
         self.rt_output.delete(1.0, tk.END)
+        self.rt_output.insert(tk.END, "Model is loading....\n")
+        self.rt_output.see(tk.END)
         self.rt_start_btn.config(state=tk.DISABLED)
         self.rt_stop_btn.config(state=tk.NORMAL)
+        self.root.update_idletasks()
 
         threshold = self._get_threshold("realtime")
         smoothing = self._get_smoothing("realtime")
@@ -192,7 +195,7 @@ class WakeWordUI:
             proc.terminate()
         self.rt_start_btn.config(state=tk.NORMAL)
         self.rt_stop_btn.config(state=tk.DISABLED)
-        self.rt_output.insert(tk.END, "\n[Stopped]\n")
+        self.rt_output.insert(tk.END, "\nStopped.\n")
 
     def _browse_file(self):
         path = filedialog.askopenfilename(

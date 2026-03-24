@@ -39,6 +39,7 @@ def run_realtime(threshold_override=None, smoothing_windows=None):
 
     print("Loading model...")
     model, scaler, config = load_artifacts()
+    print("Model loaded.")
     if threshold_override is not None:
         config = dict(config)
         config["sequential_threshold"] = threshold_override
@@ -61,8 +62,8 @@ def run_realtime(threshold_override=None, smoothing_windows=None):
     )
 
     buffer = np.zeros(buffer_size, dtype=np.float32)
-    print("Listening... (Ctrl+C to stop)")
-    print(f"Requires {n_consecutive} consecutive windows above threshold to trigger.\n")
+    print("Ready. Start talking!")
+    print(f"(Requires {n_consecutive} consecutive windows above threshold to trigger. Ctrl+C to stop)\n")
 
     try:
         while True:
@@ -82,7 +83,7 @@ def run_realtime(threshold_override=None, smoothing_windows=None):
             triggered, prob = detector.process_window(features_dict)
             if triggered:
                 print("\033[92m" + "=" * 40)
-                print("*** WAKE WORD DETECTED ***")
+                print("Detecting.... Wake word detected!")
                 print("=" * 40 + "\033[0m")
                 print(f"  (P(wake)={prob:.2f})\n")
     except KeyboardInterrupt:

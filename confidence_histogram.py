@@ -19,16 +19,17 @@ from wakeword.file_test import run_file_test_with_scorecard
 
 def main(threshold=0.70, smoothing=2, bins=20, output="confidence_histogram.png"):
     import warnings
-    warnings.filterwarnings("ignore", category=UserWarning, module="sklearn")
 
     load_config()
     root = get_project_root()
 
     print(f"Running file-test (threshold={threshold}, smoothing={smoothing})...")
-    results = run_file_test_with_scorecard(
-        threshold_override=threshold,
-        smoothing_windows=smoothing,
-    )
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=UserWarning, module="sklearn")
+        results = run_file_test_with_scorecard(
+            threshold_override=threshold,
+            smoothing_windows=smoothing,
+        )
     if not results:
         print("No test results.")
         return
