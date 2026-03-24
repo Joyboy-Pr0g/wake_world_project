@@ -117,15 +117,10 @@ class WakeWordUI:
         self.rt_start_btn.pack(side=tk.LEFT, padx=4)
         self.rt_stop_btn = ttk.Button(rt_ctrl, text="Stop", command=self._stop_realtime, state=tk.DISABLED)
         self.rt_stop_btn.pack(side=tk.LEFT)
-        ttk.Button(rt_ctrl, text="Record & Test (5s)", command=self._run_record_test).pack(side=tk.LEFT, padx=(12, 0))
 
         self.rt_output = scrolledtext.ScrolledText(rt_frame, height=14, state=tk.NORMAL, wrap=tk.WORD)
         self.rt_output.pack(fill=tk.BOTH, expand=True)
-        self.rt_output.insert(
-            tk.END,
-            "Live: 'Start Listening' for continuous detection.\n"
-            "Record & Test: Record 5 sec, then run detection (like a test sample).\n"
-        )
+        self.rt_output.insert(tk.END, "Click 'Start Listening' to begin. Output appears here.\n")
 
         # ----- File Test tab -----
         ft_frame = ttk.Frame(notebook, padding=8)
@@ -201,40 +196,6 @@ class WakeWordUI:
         self.rt_start_btn.config(state=tk.NORMAL)
         self.rt_stop_btn.config(state=tk.DISABLED)
         self.rt_output.insert(tk.END, "\nStopped.\n")
-
-    def _run_record_test(self):
-        """Record from mic, then run detection (like file-test)."""
-        self.rt_output.delete(1.0, tk.END)
-        self.rt_output.insert(tk.END, "Record & Test: Loading model...\n")
-        self.rt_output.see(tk.END)
-        self.root.update_idletasks()
-
-        def run():
-            from wakeword.realtime import run_record_test
-            import io
-            import sys
-            threshold = self._get_threshold("realtime")
-            smoothing = self._get_smoothing("realtime")
-            old_stdout = sys.stdout
-            sys.stdout = out = io.StringIO()
-            try:
-                run_record_test(
-                    threshold_override=threshold,
-                    smoothing_windows=smoothing,
-                    duration_sec=5,
-                    interactive=False,
-                )
-            finally:
-                sys.stdout = old_stdout
-            result_text = out.getvalue()
-            self.root.after(0, lambda: self._show_record_result(result_text))
-
-        threading.Thread(target=run, daemon=True).start()
-
-    def _show_record_result(self, text):
-        self.rt_output.delete(1.0, tk.END)
-        self.rt_output.insert(tk.END, text)
-        self.rt_output.see(tk.END)
 
     def _browse_file(self):
         path = filedialog.askopenfilename(

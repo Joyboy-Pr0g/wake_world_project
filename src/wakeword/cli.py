@@ -14,7 +14,7 @@ def main():
     from wakeword.dataset import build_dataset
     from wakeword.train import train_model
     from wakeword.collect import collect_hard_negatives
-    from wakeword.realtime import run_realtime, run_record_test
+    from wakeword.realtime import run_realtime
     from wakeword.file_test import run_file_test
     from wakeword.evaluate import run_evaluate_command, run_scorecard_metrics
     from wakeword.mine_hard_negatives import run_mine_hard_negatives
@@ -33,14 +33,6 @@ def main():
             threshold_override=getattr(args, "threshold", None),
             smoothing_windows=getattr(args, "smoothing", None),
             vad_disabled=getattr(args, "no_vad", False),
-        )
-
-    def cmd_record_test(args):
-        load_config(args.config)
-        run_record_test(
-            threshold_override=getattr(args, "threshold", None),
-            smoothing_windows=getattr(args, "smoothing", 2),
-            duration_sec=getattr(args, "duration", 5),
         )
 
     def cmd_file_test(args):
@@ -91,7 +83,6 @@ Commands:
   evaluate      Generate ROC/PR curves, metrics report (requires trained model)
   scorecard     Metric dashboard from test_samples (Precision, Recall, F1, Confusion Matrix)
   realtime      Live microphone detection
-  record-test   Record audio from mic, then run detection (like a test sample)
   file-test     Test .wav files in test_samples/
   ui            Simple Tkinter GUI (realtime + file-test)
   collect       Copy hard_negatives.txt entries to hard_negatives/
@@ -108,11 +99,6 @@ Commands:
     p_realtime.add_argument("-s", "--smoothing", type=int, default=None, help="Consecutive windows required (default: 2)")
     p_realtime.add_argument("--no-vad", action="store_true", help="Disable VAD (process all audio; use if mic is quiet or no detections)")
     p_realtime.set_defaults(func=cmd_realtime)
-    p_record = subparsers.add_parser("record-test", help="Record from mic, then run detection (like file-test)")
-    p_record.add_argument("-t", "--threshold", type=float, default=None, help="Threshold (recommended: 0.70)")
-    p_record.add_argument("-s", "--smoothing", type=int, default=2, help="Consecutive windows required (default: 2)")
-    p_record.add_argument("-d", "--duration", type=float, default=5, help="Recording duration in seconds (default: 5)")
-    p_record.set_defaults(func=cmd_record_test)
     p_ft = subparsers.add_parser("file-test", help="Test files in test_samples/")
     p_ft.add_argument("-t", "--threshold", type=float, default=None, help="Threshold (recommended: 0.70)")
     p_ft.add_argument("-s", "--smoothing", type=int, default=2, help="Consecutive windows required (default: 2)")
