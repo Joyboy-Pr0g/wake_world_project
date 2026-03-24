@@ -63,7 +63,7 @@ realtime:
   hop_samples: 4000
   buffer_samples: 16000
   sequential_windows: 2
-  vad_enabled: true
+  vad_enabled: false
   vad_rms_threshold: 0.01
   vad_zcr_threshold: 0.02
   cooldown_seconds: 2.0

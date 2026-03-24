@@ -32,6 +32,7 @@ def main():
         run_realtime(
             threshold_override=getattr(args, "threshold", None),
             smoothing_windows=getattr(args, "smoothing", None),
+            vad_disabled=getattr(args, "no_vad", False),
         )
 
     def cmd_file_test(args):
@@ -96,6 +97,7 @@ Commands:
     p_realtime = subparsers.add_parser("realtime", help="Live mic detection")
     p_realtime.add_argument("-t", "--threshold", type=float, default=None, help="Threshold (recommended: 0.70)")
     p_realtime.add_argument("-s", "--smoothing", type=int, default=None, help="Consecutive windows required (default: 2)")
+    p_realtime.add_argument("--no-vad", action="store_true", help="Disable VAD (process all audio; use if mic is quiet or no detections)")
     p_realtime.set_defaults(func=cmd_realtime)
     p_ft = subparsers.add_parser("file-test", help="Test files in test_samples/")
     p_ft.add_argument("-t", "--threshold", type=float, default=None, help="Threshold (recommended: 0.70)")

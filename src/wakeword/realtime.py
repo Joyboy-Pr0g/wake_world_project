@@ -22,7 +22,7 @@ def features_to_dict(features_list, config):
     return {k: d[k] for k in FEATURE_COLUMNS if k not in drop and k in d}
 
 
-def run_realtime(threshold_override=None, smoothing_windows=None):
+def run_realtime(threshold_override=None, smoothing_windows=None, vad_disabled=False):
     import warnings
     warnings.filterwarnings("ignore", category=UserWarning, module="sklearn")
 
@@ -35,7 +35,7 @@ def run_realtime(threshold_override=None, smoothing_windows=None):
     cooldown_sec = rt_cfg.get("cooldown_seconds", 2.0)
     hop_sec = hop / sr
     cooldown_windows = max(0, int(cooldown_sec / hop_sec))
-    vad_enabled = rt_cfg.get("vad_enabled", False)
+    vad_enabled = False if vad_disabled else rt_cfg.get("vad_enabled", False)
     vad_rms = rt_cfg.get("vad_rms_threshold", 0.01)
 
     print("Loading model...")
