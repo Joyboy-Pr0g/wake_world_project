@@ -24,8 +24,8 @@ def safe_print(text):
         print(text.encode("ascii", "replace").decode("ascii"))
 
 
-def process_file(path, model, scaler, config, sr, window_size, hop_size, normalize=True, target_rms=0.05):
-    audio, _ = librosa.load(path, sr=sr)
+def process_audio(audio, model, scaler, config, sr, window_size, hop_size, normalize=True, target_rms=0.05):
+    """Process in-memory mono float32 audio (same pipeline as process_file)."""
     if len(audio) < window_size:
         audio = np.pad(audio, (0, window_size - len(audio)))
     all_probs = []
@@ -54,6 +54,13 @@ def process_file(path, model, scaler, config, sr, window_size, hop_size, normali
         proba = model.predict_proba(X_sel)[0, list(model.classes_).index("wake")]
         all_probs = [proba]
     return all_probs
+
+
+def process_file(path, model, scaler, config, sr, window_size, hop_size, normalize=True, target_rms=0.05):
+    audio, _ = librosa.load(path, sr=sr)
+    if len(audio) < window_size:
+        audio = np.pad(audio, (0, window_size - len(audio)))
+    return process_audio(audio, model, scaler, config, sr, window_size, hop_size, normalize, target_rms)
 
 
 def _is_nonwake_filename(fname):
