@@ -209,3 +209,60 @@ def run_evaluate_command():
 
     print(f"\nEvaluation saved to {out_dir}/")
     print(f"Wake Recall: {metrics['recall_wake']:.1%}  FP/hour: {metrics['fp_per_hour']:.2f}")
+
+
+def run_scorecard_metrics(threshold_override=None, smoothing_windows=2):
+    """
+    Run file-test on test_samples/, compute Precision/Recall/F1 from scorecard results,
+    and print a Metric Dashboard with confusion matrix.
+    """
+    from .file_test import run_file_test_with_scorecard
+
+    results = run_file_test_with_scorecard(
+        threshold_override=threshold_override,
+        smoothing_windows=smoothing_windows,
+    )
+    if not results:
+        print("No results. Ensure test_samples/ contains .wav files.")
+        return
+
+    valid = [r for r in results if r["prediction"] in ("wake", "nonwake")]
+    if not valid:
+        print("No valid predictions.")
+        return
+    results = valid
+
+    y_true = [r["ground_truth"] for r in results]
+    y_pred = [r["prediction"] for r in results]
+    labels = ["wake", "nonwake"]
+
+    metrics = compute_metrics(y_true, y_pred, labels)
+    cm = np.array(metrics["confusion_matrix"])
+
+    print("\n" + "=" * 60)
+    print("Hey Pakize - Metric Dashboard")
+    print("=" * 60)
+    print(f"\nThreshold: {threshold_override or 'config default'}")
+    print(f"Smoothing: {smoothing_windows} consecutive windows")
+    print(f"Total files tested: {len(results)}")
+    print("\n--- Precision, Recall, F1-Score ---")
+    print(f"  Wake Precision:    {metrics['precision_wake']:.4f}")
+    print(f"  Wake Recall:       {metrics['recall_wake']:.4f}")
+    print(f"  Wake F1-Score:     {metrics['f1_wake']:.4f}")
+    print(f"  Nonwake Precision: {metrics['precision_nonwake']:.4f}")
+    print(f"  Nonwake Recall:    {metrics['recall_nonwake']:.4f}")
+    print(f"  Nonwake F1-Score:  {metrics['f1_nonwake']:.4f}")
+    print(f"  Macro F1:          {metrics['f1_macro']:.4f}")
+    print(f"  Accuracy:          {metrics['accuracy']:.4f}")
+    print("\n--- Confusion Matrix (Actual vs Predicted) ---")
+    print("""
+              Predicted
+              wake   nonwake
+    Actual wake   {tp:>5}   {fn:>5}   (TP, FN)
+    Actual nonwake {fp:>5}   {tn:>5}   (FP, TN)
+    """.format(
+        tp=cm[0][0], fn=cm[0][1],
+        fp=cm[1][0], tn=cm[1][1],
+    ).strip())
+    print("\n  TP=True Positives  FN=False Negatives (missed wake)")
+    print("  FP=False Positives (false alarms)  TN=True Negatives")

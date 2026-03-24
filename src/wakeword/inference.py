@@ -104,9 +104,9 @@ class StreamingWakeDetector:
         all_cols = self.config.get("all_feature_cols") or self.config.get("feature_cols", [])
         selected_mask = self.config.get("selected_mask")
         if hasattr(features_1d, "keys"):
-            X_full = np.array([[features_1d[fc] for fc in all_cols]]).reshape(1, -1)
+            X_full = np.array([[features_1d[fc] for fc in all_cols]], dtype=np.float64).reshape(1, -1)
         else:
-            X_full = np.asarray(features_1d).reshape(1, -1)
+            X_full = np.asarray(features_1d, dtype=np.float64).reshape(1, -1)
         X_scaled_full = self.scaler.transform(X_full)
         if selected_mask is not None:
             X = X_scaled_full[:, selected_mask]

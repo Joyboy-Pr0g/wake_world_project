@@ -16,7 +16,7 @@ def main():
     from wakeword.collect import collect_hard_negatives
     from wakeword.realtime import run_realtime
     from wakeword.file_test import run_file_test
-    from wakeword.evaluate import run_evaluate_command
+    from wakeword.evaluate import run_evaluate_command, run_scorecard_metrics
     from wakeword.mine_hard_negatives import run_mine_hard_negatives
 
     def cmd_dataset(args):
@@ -57,6 +57,13 @@ def main():
         load_config(args.config)
         run_evaluate_command()
 
+    def cmd_scorecard(args):
+        load_config(args.config)
+        run_scorecard_metrics(
+            threshold_override=getattr(args, "threshold", None),
+            smoothing_windows=getattr(args, "smoothing", 2),
+        )
+
     def cmd_mine(args):
         load_config(args.config)
         run_mine_hard_negatives(
@@ -73,6 +80,7 @@ Commands:
   dataset       Build dataset.csv from dataset/wake and dataset/nonwake
   train         Train ensemble model, save model.pkl, scaler.pkl, etc.
   evaluate      Generate ROC/PR curves, metrics report (requires trained model)
+  scorecard     Metric dashboard from test_samples (Precision, Recall, F1, Confusion Matrix)
   realtime      Live microphone detection
   file-test     Test .wav files in test_samples/
   ui            Simple Tkinter GUI (realtime + file-test)
@@ -96,6 +104,10 @@ Commands:
     subparsers.add_parser("ui", help="Simple GUI for realtime + file-test").set_defaults(func=cmd_ui)
     subparsers.add_parser("collect", help="Copy hard_negatives.txt to hard_negatives/").set_defaults(func=cmd_collect)
     subparsers.add_parser("evaluate", help="Generate evaluation report").set_defaults(func=cmd_evaluate)
+    p_scorecard = subparsers.add_parser("scorecard", help="Metric dashboard from test_samples")
+    p_scorecard.add_argument("-t", "--threshold", type=float, default=None, help="Threshold")
+    p_scorecard.add_argument("-s", "--smoothing", type=int, default=2, help="Consecutive windows")
+    p_scorecard.set_defaults(func=cmd_scorecard)
     p_mine = subparsers.add_parser("mine", help="Copy nonwake FPs from test_samples to hard_negatives/")
     p_mine.add_argument("-d", "--dir", default=None, help="Input folder (default: test_samples)")
     p_mine.add_argument("-t", "--threshold", type=float, default=0.5, help="Min confidence to copy (default: 0.5)")

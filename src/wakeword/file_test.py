@@ -33,24 +33,26 @@ def process_file(path, model, scaler, config, sr, window_size, hop_size, normali
         window = audio[start : start + window_size]
         features_list = extract_features(window, sr, max_len=window_size, normalize=normalize, target_rms=target_rms)
         X_full = features_to_df(features_list, config)
-        X_scaled = scaler.transform(X_full)
+        X_arr = np.asarray(X_full.values, dtype=np.float64).reshape(1, -1)
+        X_scaled = scaler.transform(X_arr)
         selected_mask = config.get("selected_mask")
         if selected_mask is not None:
-            X_sel = X_scaled[:, selected_mask]
+            X_sel = np.asarray(X_scaled[:, selected_mask])
         else:
-            X_sel = X_scaled
+            X_sel = np.asarray(X_scaled)
         proba = model.predict_proba(X_sel)[0, list(model.classes_).index("wake")]
         all_probs.append(proba)
     if not all_probs:
         window = audio[:window_size]
         features_list = extract_features(window, sr, max_len=window_size, normalize=normalize, target_rms=target_rms)
         X_full = features_to_df(features_list, config)
-        X_scaled = scaler.transform(X_full)
+        X_arr = np.asarray(X_full.values, dtype=np.float64).reshape(1, -1)
+        X_scaled = scaler.transform(X_arr)
         selected_mask = config.get("selected_mask")
         if selected_mask is not None:
-            X_sel = X_scaled[:, selected_mask]
+            X_sel = np.asarray(X_scaled[:, selected_mask])
         else:
-            X_sel = X_scaled
+            X_sel = np.asarray(X_scaled)
         proba = model.predict_proba(X_sel)[0, list(model.classes_).index("wake")]
         all_probs = [proba]
     return all_probs
@@ -79,6 +81,9 @@ def test_single_file(path, threshold_override=None, smoothing_windows=2):
     Test a single WAV file. Returns dict with triggered, max_prob, confidence_pct, error.
     For use by UI or APIs.
     """
+    import warnings
+    warnings.filterwarnings("ignore", category=UserWarning, module="sklearn")
+
     from .config import get_project_root
     cfg = load_config()
     root = get_project_root()
@@ -112,6 +117,9 @@ def test_single_file(path, threshold_override=None, smoothing_windows=2):
 
 
 def run_file_test(threshold_override=None, smoothing_windows=2):
+    import warnings
+    warnings.filterwarnings("ignore", category=UserWarning, module="sklearn")
+
     from .config import get_project_root
     cfg = load_config()
     root = get_project_root()
@@ -148,23 +156,12 @@ def run_file_test(threshold_override=None, smoothing_windows=2):
         try:
             probs = process_file(path, model, scaler, config, sr, window_size, hop_size, normalize, target_rms)
         except Exception as e:
-            safe_print(f"[{fname}] ERROR: {e}")
+            safe_print(f"[TEST] File: {fname} | Confidence: N/A | Status: ERROR - {e}")
             continue
         max_prob = max(probs)
-        confidence_pct = max_prob * 100
         triggered = _has_consecutive_high(probs, threshold, smoothing_windows)
-        prediction = "wake" if triggered else "nonwake"
-        print("-" * 50)
-        safe_print(f"File: {fname}")
-        print(f"  Wake Confidence (max): {confidence_pct:.1f}%")
-        print(f"  Prediction: {prediction}")
-        if triggered:
-            print()
-            print("\033[92m" + "=" * 50)
-            print("  TRIGGERED: Hey Pakize detected!")
-            print("=" * 50 + "\033[0m")
-            print()
-        print()
+        status = "TRIGGERED" if triggered else "nonwake"
+        safe_print(f"[TEST] File: {fname} | Confidence: {max_prob:.2%} | Status: {status}")
     print("-" * 50)
     print("Done.")
 
@@ -174,6 +171,9 @@ def run_file_test_with_scorecard(threshold_override=None, smoothing_windows=2):
     Run file-test on test_samples/, print per-file results (like run_file_test),
     then return structured data for a scorecard: totals, successes, failures, wrong files.
     """
+    import warnings
+    warnings.filterwarnings("ignore", category=UserWarning, module="sklearn")
+
     from .config import get_project_root
     cfg = load_config()
     root = get_project_root()

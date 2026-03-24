@@ -23,6 +23,9 @@ def features_to_dict(features_list, config):
 
 
 def run_realtime(threshold_override=None, smoothing_windows=None):
+    import warnings
+    warnings.filterwarnings("ignore", category=UserWarning, module="sklearn")
+
     cfg = load_config()
     rt_cfg = cfg.get("realtime", {})
     sr = rt_cfg.get("sample_rate", 16000)
